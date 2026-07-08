@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionale Sopralluoghi & Preventivi</title>
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f5f7fa;
+    --border: #dde1e9;
+    --accent: #2563eb;
+    --accent2: #16a34a;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --text: #111827;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --radius: 8px;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; min-height: 100vh; }
+
+  /* LAYOUT */
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 52px; flex-shrink: 0; }
+  .topbar-logo { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; white-space: nowrap; }
+  .topbar-logo span { color: var(--text2); font-weight: 400; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 210px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+  .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* SIDEBAR */
+  .sidebar-section { padding: 14px 14px 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; cursor: pointer; color: var(--text2); border-left: 2px solid transparent; transition: all .15s; font-size: 12.5px; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface2); color: var(--accent); border-left-color: var(--accent); }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .badge { margin-left: auto; background: var(--accent); color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 600; }
+  .badge.warn { background: var(--warn); }
+  .badge.danger { background: var(--danger); }
+
+  /* TOP TOOLBAR */
+  .toolbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+  .search-box { flex: 1; min-width: 200px; position: relative; }
+  .search-box input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px 6px 30px; color: var(--text); font-size: 12.5px; outline: none; }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box .sicon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+  select, .btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 11px; color: var(--text); font-size: 12px; cursor: pointer; outline: none; }
+  select:focus { border-color: var(--accent); }
+  .btn { display: inline-flex; align-items: center; gap: 5px; transition: all .15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+  .btn.primary:hover { background: #3a7de8; border-color: #3a7de8; color: white; }
+  .btn.success { background: var(--accent2); border-color: var(--accent2); color: white; font-weight: 600; }
+  .btn.danger { background: var(--danger); border-color: var(--danger); color: white; }
+
+  /* TABLE */
+  .table-wrap { flex: 1; overflow: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--surface); border-bottom: 2px solid var(--border); padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); white-space: nowrap; position: sticky; top: 0; z-index: 2; cursor: pointer; user-select: none; }
+  thead th:hover { color: var(--text); }
+  thead th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  thead th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.selected { background: #eff6ff; }
+  td { padding: 8px 10px; vertical-align: middle; max-width: 240px; }
+  .cell-clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* STATO BADGES */
+  .stato { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+  .stato-sopralluogo { background: #fef3c7; color: #92400e; }
+  .stato-preventivo { background: #dbeafe; color: #1d4ed8; }
+  .stato-accettato { background: #dcfce7; color: #15803d; }
+  .stato-nonpiu { background: #fee2e2; color: #b91c1c; }
+  .stato-vuoto { background: #f3f4f6; color: var(--text3); }
+  .stato-noncreato { background: #f3f4f6; color: var(--text3); }
+
+  /* TIPOLOGIA */
+  .tipo { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; }
+  .tipo-privato { background: #eff6ff; color: var(--accent); }
+  .tipo-societa { background: #f0fdf4; color: var(--accent2); }
+  .tipo-altro { background: #f3f4f6; color: var(--text3); }
+
+  /* RICHIESTA badge */
+  .rich { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+
+  /* APPUNTAMENTO */
+  .app-cell { display: flex; flex-direction: column; gap: 1px; }
+  .app-chi { font-size: 11px; color: var(--accent2); font-weight: 600; }
+  .app-data { font-size: 11.5px; color: var(--text); }
+  .app-passato { color: var(--danger); }
+  .app-oggi { color: var(--warn); }
+  .app-futuro { color: var(--accent2); }
+
+  /* STATS BAR */
+  .stats-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; overflow-x: auto; }
+  .stat-card { padding: 10px 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+  .stat-card:last-child { border-right: none; }
+  .stat-n { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .stat-label { font-size: 10.5px; color: var(--text3); font-weight: 500; }
+  .stat-card.s1 .stat-n { color: var(--warn); }
+  .stat-card.s2 .stat-n { color: var(--accent); }
+  .stat-card.s3 .stat-n { color: var(--accent2); }
+  .stat-card.s4 .stat-n { color: var(--danger); }
+  .stat-card.s5 .stat-n { color: var(--text2); }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 640px; max-width: 96vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(0,0,0,.15); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; padding: 2px 6px; border-radius: 4px; }
+  .modal-close:hover { color: var(--text); background: var(--surface2); }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
+  .field input, .field select, .field textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 10px; color: var(--text); font-size: 13px; outline: none; font-family: var(--font); }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field-sep { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+  /* DETAIL VIEW */
+  .detail-panel { background: var(--surface); border-left: 1px solid var(--border); width: 340px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .detail-panel.hidden { display: none; }
+  .detail-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .detail-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .detail-sub { color: var(--text2); font-size: 12px; }
+  .detail-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .detail-section h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 8px; }
+  .detail-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+  .detail-key { font-size: 11px; color: var(--text3); min-width: 90px; padding-top: 1px; }
+  .detail-val { font-size: 12.5px; color: var(--text); flex: 1; word-break: break-word; }
+  .detail-note { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+  .detail-actions { padding: 12px 16px; display: flex; flex-direction: column; gap: 7px; }
+
+  /* NOTIFICHE */
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); display: inline-block; margin-left: 4px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+  .toast { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.12); animation: slideIn .25s ease; min-width: 260px; }
+  @keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+  .toast.success { border-left: 3px solid var(--accent2); }
+  .toast.warn { border-left: 3px solid var(--warn); }
+  .toast.error { border-left: 3px solid var(--danger); }
+
+  /* APPUNTAMENTI OGGI */
+  .oggi-banner { background: linear-gradient(135deg, #eff6ff, #f0fdf4); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; flex-wrap: wrap; }
+  .oggi-banner.hidden { display: none; }
+  .oggi-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 11.5px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .oggi-item:hover { border-color: var(--accent); }
+  .oggi-label { font-size: 10.5px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .oggi-ora { color: var(--warn); font-weight: 700; }
+
+  /* EMPTY */
+  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text3); height: 200px; font-size: 13px; }
+  .empty .eicon { font-size: 36px; }
+
+  /* KANBAN VIEW */
+  .kanban-wrap { flex: 1; overflow-x: auto; overflow-y: hidden; padding: 12px; display: flex; gap: 12px; }
+  .kanban-col { min-width: 240px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; max-height: 100%; }
+  .kanban-col-header { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between; }
+  .kanban-cards { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .kanban-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 9px 11px; cursor: pointer; transition: border-color .15s; }
+  .kanban-card:hover { border-color: var(--accent); }
+  .kanban-card-name { font-size: 12.5px; font-weight: 600; margin-bottom: 3px; }
+  .kanban-card-sub { font-size: 11px; color: var(--text2); }
+  .kanban-card-app { font-size: 11px; margin-top: 5px; }
+
+  /* VIEWS TOGGLE */
+  .view-toggle { display: flex; gap: 4px; }
+  .view-btn { padding: 5px 9px; border-radius: 5px; background: transparent; border: 1px solid var(--border); color: var(--text3); cursor: pointer; font-size: 13px; }
+  .view-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* GESTIONALE BADGE */
+  .gest-badge { display:inline-flex; align-items:center; gap:3px; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; white-space:nowrap; }
+  .gest-ev-si  { background:#dcfce7; color:#15803d; }
+  .gest-ev-no  { background:#f3f4f6; color:#9ca3af; }
+  .gest-gp-si  { background:#dbeafe; color:#1d4ed8; }
+  .gest-gp-no  { background:#f3f4f6; color:#9ca3af; }
+  .gest-wrap   { display:flex; gap:4px; align-items:center; }
+  .field input:disabled { opacity:.45; cursor:not-allowed; }
+
+  /* RESPONSIVE */
+  @media(max-width:700px) {
+    .sidebar { display: none; }
+    .detail-panel { display: none !important; }
+    .form-grid { grid-template-columns: 1fr; }
+    .stats-bar { display: none; }
+  }
+  .row-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+  tbody tr:hover .row-actions { opacity: 1; }
+  .row-act-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; color: var(--text2); cursor: pointer; font-size: 11px; }
+  .row-act-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .row-act-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">⚡ GestPrev <span>/ Sopralluoghi & Preventivi</span></div>
+    <div style="flex:1"></div>
+    <button class="btn" id="btn-notif" title="Notifiche">🔔 <span id="notif-count" class="badge danger" style="display:none">0</span></button>
+    <button class="btn primary" id="btn-new">＋ Nuova pratica</button>
+  </div>
+
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">Vista</div>
+      <div class="nav-item active" data-view="table" onclick="switchView('table',this)">
+        <span class="icon">☰</span> Tutte le pratiche <span id="badge-all" class="badge">0</span>
+      </div>
+      <div class="nav-item" data-view="kanban" onclick="switchView('kanban',this)">
+        <span class="icon">▦</span> Kanban
+      </div>
+
+      <div class="sidebar-section" style="margin-top:8px">Filtra stato</div>
+      <div class="nav-item" onclick="filterSidebar('',this)">
+        <span class="icon">📋</span> Tutti
+      </div>
+      <div class="nav-item" onclick="filterSidebar('SOPRALLUOGO NON FATTO',this)">
+        <span class="icon">📍</span> Sopralluogo <span id="badge-sopr" class="badge warn">0</span>
+      </div>
+      <div class="nav-item" onclick="filterSidebar('PREVENTIVO INVIATO',this)">
+        <span class="icon">📄</span> Preventivo <span id="badge-prev" class="badge">0</span>
+      </div>
+      <div class="nav-item" onclick="filterSidebar('ACCETTATO',this)">
+        <span class="icon">✅</span> Accettati <span id="badge-acc" class="badge" style="background:var(--accent2)">0</span>
+      </div>
+      <div class="nav-item" onclick="filterSidebar('NON PIU INTERESSATO',this)">
+        <span class="icon">❌</span> Non interessati <span id="badge-npi" class="badge danger">0</span>
+      </div>
+
+      <div class="sidebar-section" style="margin-top:8px">Tecnico</div>
+      <div id="sidebar-tecnici"></div>
+
+      <div style="flex:1"></div>
+      <div style="padding:12px 14px; font-size:10px; color:var(--text3); line-height:1.5">
+        <div id="data-meta">Dati in localStorage</div>
+        <div style="margin-top:4px"><span style="cursor:pointer;color:var(--accent)" onclick="exportCSV()">⬇ Esporta CSV</span> · <span style="cursor:pointer;color:var(--text3)" onclick="importData()">⬆ Importa</span></div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- BANNER OGGI -->
+      <div class="oggi-banner hidden" id="oggi-banner">
+        <span class="oggi-label">📅 Oggi:</span>
+        <div id="oggi-items" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-card s1"><div class="stat-n" id="st1">0</div><div class="stat-label">Sopralluogo da fare</div></div>
+        <div class="stat-card s2"><div class="stat-n" id="st2">0</div><div class="stat-label">Preventivi inviati</div></div>
+        <div class="stat-card s3"><div class="stat-n" id="st3">0</div><div class="stat-label">Accettati</div></div>
+        <div class="stat-card s4"><div class="stat-n" id="st4">0</div><div class="stat-label">Non interessati</div></div>
+        <div class="stat-card s5"><div class="stat-n" id="st5">0</div><div class="stat-label">Totale pratiche</div></div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="sicon">🔍</span>
+          <input type="text" id="search" placeholder="Cerca cliente, nota, località..." oninput="renderTable()">
+        </div>
+        <select id="f-stato" onchange="renderTable()">
+          <option value="">Tutti gli stati</option>
+          <option>SOPRALLUOGO NON FATTO</option>
+          <option>PREVENTIVO INVIATO</option>
+          <option>PREVENTIVO ACCETTATO</option>
+          <option>NON PIU INTERESSATO</option>
+          <option>NON CREATO</option>
+        </select>
+        <select id="f-tipo" onchange="renderTable()">
+          <option value="">Tipo cliente</option>
+          <option>PRIVATO</option>
+          <option>SOCIETA</option>
+        </select>
+        <select id="f-rich" onchange="renderTable()">
+          <option value="">Tutte le richieste</option>
+          <option>CDZ</option>
+          <option>PDC</option>
+          <option>FV</option>
+          <option>REFRIGERAZIONE</option>
+        </select>
+        <select id="f-tec" onchange="renderTable()">
+          <option value="">Tutti i tecnici</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="vb-table" onclick="switchView('table',null)">☰</button>
+          <button class="view-btn" id="vb-kanban" onclick="switchView('kanban',null)">▦</button>
+        </div>
+      </div>
+
+      <!-- TABLE VIEW -->
+      <div id="view-table" style="display:flex;flex:1;overflow:hidden">
+        <div class="table-wrap" id="table-wrap">
+          <table id="main-table">
+            <thead>
+              <tr>
+                <th onclick="sortBy('chiamata')">Data chiamata <span class="sort-arrow">↕</span></th>
+                <th onclick="sortBy('stato')">Stato <span class="sort-arrow">↕</span></th>
+                <th onclick="sortBy('cliente')">Cliente <span class="sort-arrow">↕</span></th>
+                <th onclick="sortBy('tipo')">Tipo <span class="sort-arrow">↕</span></th>
+                <th onclick="sortBy('richiesta')">Richiesta <span class="sort-arrow">↕</span></th>
+                <th onclick="sortBy('localita')">Località <span class="sort-arrow">↕</span></th>
+                <th>Appuntamento</th>
+                <th>EV / GP</th>
+                <th>Note</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+          <div class="empty hidden" id="empty-state">
+            <div class="eicon">📭</div>
+            <div>Nessuna pratica trovata</div>
+            <button class="btn primary" onclick="openNew()">+ Aggiungi pratica</button>
+          </div>
+        </div>
+        <div class="detail-panel hidden" id="detail-panel"></div>
+      </div>
+
+      <!-- KANBAN VIEW -->
+      <div id="view-kanban" style="display:none;flex:1;overflow:hidden">
+        <div class="kanban-wrap" id="kanban-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="e=>e.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nuova pratica</div>
+      <button class="modal-close" onclick="closeModalForce()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Data chiamata</label>
+          <input type="date" id="f-chiamata">
+        </div>
+        <div class="field">
+          <label>Stato pratica</label>
+          <select id="f-stato2">
+            <option value="">— seleziona —</option>
+            <option>SOPRALLUOGO NON FATTO</option>
+            <option>PREVENTIVO INVIATO</option>
+            <option>PREVENTIVO ACCETTATO</option>
+            <option>NON PIU INTERESSATO</option>
+            <option>NON CREATO</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Cliente / Ragione sociale</label>
+          <input type="text" id="f-cliente" placeholder="Es. ROSSI MARIO">
+        </div>
+        <div class="field">
+          <label>Tipologia</label>
+          <select id="f-tipo2">
+            <option value="">— seleziona —</option>
+            <option>PRIVATO</option>
+            <option>SOCIETA</option>
+            <option>AMBULATORIO</option>
+            <option>FARMACIA</option>
+            <option>SCUOLA</option>
+            <option>MUNICIPIO</option>
+            <option>NEGOZIO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Richiesta</label>
+          <select id="f-rich2">
+            <option value="">— seleziona —</option>
+            <option>CDZ</option>
+            <option>PDC</option>
+            <option>CDZ +FV</option>
+            <option>CONDIZIONATORI</option>
+            <option>POMPA DI CALORE</option>
+            <option>REFRIGERAZIONE</option>
+            <option>CELLA FRIGO</option>
+            <option>RICAMBIO ARIA</option>
+            <option>SPOSTAMENTO CDZ</option>
+            <option>FRIGHI</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Località</label>
+          <input type="text" id="f-localita" placeholder="Es. AOSTA">
+        </div>
+        <hr class="field-sep">
+        <div class="field">
+          <label>Tecnico appuntamento</label>
+          <input type="text" id="f-app-chi" placeholder="Es. Floran, Magri, Ponessa">
+        </div>
+        <div class="field">
+          <label>Data appuntamento</label>
+          <input type="date" id="f-app-data">
+        </div>
+        <div class="field">
+          <label>Ora appuntamento</label>
+          <input type="time" id="f-app-ora" step="900">
+        </div>
+        <div class="field">
+          <label>Evolex</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer">
+              <input type="checkbox" id="f-evolex-ok" onchange="toggleGestField('evolex')" style="width:15px;height:15px;accent-color:var(--accent2)">
+              Inserito
+            </label>
+            <input type="text" id="f-evolex-num" placeholder="Es. 46210 / 438" style="flex:1" disabled>
+          </div>
+        </div>
+        <div class="field">
+          <label>Gestoprev</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer">
+              <input type="checkbox" id="f-gestoprev-ok" onchange="toggleGestField('gestoprev')" style="width:15px;height:15px;accent-color:var(--accent2)">
+              Inserito
+            </label>
+            <input type="text" id="f-gestoprev-num" placeholder="Es. 46210 / 1234" style="flex:1" disabled>
+          </div>
+        </div>
+        <hr class="field-sep">
+        <div class="field" style="grid-column:1/-1">
+          <label>Note</label>
+          <textarea id="f-note" placeholder="Indirizzo, telefono, dettagli tecnici..."></textarea>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Feedback / aggiornamenti</label>
+          <textarea id="f-feedback" placeholder="Esito chiamate, decisioni cliente..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModalForce()">Annulla</button>
+      <button class="btn primary" onclick="saveRecord()">💾 Salva pratica</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toasts"></div>
+
+<input type="file" id="file-import" accept=".json,.csv" style="display:none" onchange="handleImport(event)">
+
+<script>
+// ===== DATA =====
+let records = [];
+let editingId = null;
+let sortCol = 'chiamata';
+let sortAsc = false;
+let activeFilter = '';
+let currentView = 'table';
+let selectedId = null;
+
+// ===== STORAGE =====
+function save() {
+  try { localStorage.setItem('gestprev_v1', JSON.stringify(records)); } catch(e) {}
+  updateMeta();
+}
+function load() {
+  try {
+    const d = localStorage.getItem('gestprev_v1');
+    if (d) { records = JSON.parse(d); return; }
+  } catch(e) {}
+  // DATI DI ESEMPIO dal file Excel
+  records = INITIAL_DATA;
+  save();
+}
+function updateMeta() {
+  document.getElementById('data-meta').textContent = records.length + ' pratiche · localStorage';
+}
+
+// ===== INITIAL DATA (campione dal file Excel) =====
+const INITIAL_DATA = [
+  {id:'1',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'CESTARO CRISTINA',tipo:'PRIVATO',richiesta:'CDZ',localita:'QUART',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Tel 3474344260 (Contatto da Floran) Fraz Ecleroz - Quart',feedback:''},
+  {id:'2',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'A.N.A.S.',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Sopralluogo comunicato da Desandre per impianto deposito mezzi',feedback:''},
+  {id:'3',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'LUCIANI MATTEO',tipo:'PRIVATO',richiesta:'CDZ',localita:'SARRE',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'E\' il figlio di Torelli - fare sopralluoghi congiunti Fraz. Fachet 3 Sarre tel. 392509375 tardo pom',feedback:''},
+  {id:'4',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'VIVONA MATTEO',tipo:'PRIVATO',richiesta:'CDZ',localita:'SARRE',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Tel. 3342946767 Loc. Condemine, 57 - Sarre',feedback:''},
+  {id:'5',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'BEI - CARREFOUR EXPRESS',tipo:'SOCIETA',richiesta:'CDZ',localita:'CHATILLON',appChi:'Floran - Magri',appData:'2026-07-07',appOra:'15:30',evolex:'',gestoprev:'',note:'Richiesta sostituzione impianto di condizionamento via mail da BEI Marco Di Ceglie',feedback:''},
+  {id:'6',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'GYPPAZ DENIS',tipo:'PRIVATO',richiesta:'CDZ',localita:'SARRE',appChi:'Floran',appData:'2026-07-14',appOra:'09:00',evolex:'',gestoprev:'',note:'Fraz. Poinsod 130 - Sarre - Contattato direttamente Floran',feedback:''},
+  {id:'7',chiamata:'2026-07-06',stato:'PREVENTIVO INVIATO',cliente:'BUSCHINO RACHELE - EMPORIO DELL\'AUTO',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-03',appOra:'16:30',evolexOk:true,evolexNum:'46210/438',gestoprevOk:false,gestoprevNum:'',note:'Sopralluogo su predisposizione gia\' fatta',feedback:''},
+  {id:'8',chiamata:'2026-07-04',stato:'PREVENTIVO INVIATO',cliente:'OSTINELLI ANDREA',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-01',appOra:'16:30',evolexOk:true,evolexNum:'46206/422',gestoprevOk:true,gestoprevNum:'46206/1473',note:'Via Festaz, 52 - Aosta contattato direttamente Floran',feedback:''},
+  {id:'9',chiamata:'2026-07-04',stato:'PREVENTIVO INVIATO',cliente:'MDM',tipo:'SOCIETA',richiesta:'CDZ',localita:'CHATILLON',appChi:'Ponessa-Magri',appData:'2026-07-01',appOra:'14:00',evolexOk:true,evolexNum:'46204/416',gestoprevOk:true,gestoprevNum:'46205/1464',note:'Hanno bisogno urgente di un sopralluogo per cdz in cabina elettrica chiamare Natalino 016661476',feedback:''},
+  {id:'10',chiamata:'2026-07-03',stato:'SOPRALLUOGO NON FATTO',cliente:'EUROSERVICE',tipo:'SOCIETA',richiesta:'CDZ',localita:'QUART',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'LOC AMERIQUE, 25 QUART STELLA 3389414798 PER SPOSTAMENTO CDZ',feedback:'06/07/26 Dice che siamo troppo cari'},
+  {id:'11',chiamata:'2026-07-03',stato:'SOPRALLUOGO NON FATTO',cliente:'FANIZZI STEFANIA',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-10',appOra:'11:30',evolex:'',gestoprev:'',note:'VIA MALHERBES 20 AOSTA tel 3284510919 condizionare camera da letto e soggiorno',feedback:''},
+  {id:'12',chiamata:'2026-07-02',stato:'PREVENTIVO INVIATO',cliente:'EDISON C/O OSPEDALE',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-02',appOra:'09:00',evolexOk:true,evolexNum:'46205/419',gestoprevOk:true,gestoprevNum:'46205/1470',note:'Camera 11 Ortopedia da sostituire condizionatore mail da Glarey dell\'Edison',feedback:''},
+  {id:'13',chiamata:'2026-07-02',stato:'SOPRALLUOGO NON FATTO',cliente:'GRANGE CHRISTINE',tipo:'PRIVATO',richiesta:'CDZ',localita:'QUART',appChi:'Floran',appData:'2026-07-08',appOra:'11:00',evolex:'',gestoprev:'',note:'Tel 3492990118 preventivo per sistema di condizionamento per casa 3 livelli da fare o di merc o giov o ven',feedback:''},
+  {id:'14',chiamata:'2026-07-02',stato:'SOPRALLUOGO NON FATTO',cliente:'DI FRANCESCO ANTONIO',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Ponessa-Floran',appData:'2026-07-06',appOra:'',evolex:'',gestoprev:'',note:'Tel 3475233026 Reg. Bioula, 19/a - Aosta pdc+fotovoltaico',feedback:'aspettare per sopralluogo è mancata la moglie'},
+  {id:'15',chiamata:'2026-07-02',stato:'NON PIU INTERESSATO',cliente:'CAMBI GIUSEPPE',tipo:'PRIVATO',richiesta:'CDZ',localita:'SAINT MARCEL',appChi:'HA GIA\' PROVVEDUTO',appData:'',appOra:'',evolex:'',gestoprev:'',note:'TEL 3927050339 LOC. FAVERGE, 27 ST MARCEL',feedback:'07/07/26 L\'HO CONTATTATO PER IL SOPRALLUOGO ED HA GIA\' PROVVEDUTO VISTO CHE SIAMO STATI LENTI'},
+  {id:'16',chiamata:'2026-07-02',stato:'SOPRALLUOGO NON FATTO',cliente:'DUFOUR DANIELA',tipo:'PRIVATO',richiesta:'CDZ',localita:'SAINT VINCENT',appChi:'DA CONTATTARE A SETTEMBRE',appData:'',appOra:'',evolex:'',gestoprev:'',note:'TEL 3478219321 FRAZ. RONC SUPERIORE - casa vacanza',feedback:'07/07 E\' UNA CASA VACANZA FINO A SETTEMBRE'},
+  {id:'17',chiamata:'2026-07-01',stato:'PREVENTIVO INVIATO',cliente:'CONFIDÌ CENTRO NORD',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-06-30',appOra:'10:30',evolexOk:true,evolexNum:'46204/412',gestoprevOk:true,gestoprevNum:'46204/1459',note:'Sopralluogo per impianto nuovo Via Festaz, 79 0165548588',feedback:''},
+  {id:'18',chiamata:'2026-07-01',stato:'PREVENTIVO INVIATO',cliente:'CARPENTERIA GUOLO',tipo:'SOCIETA',richiesta:'CDZ',localita:'SAINT MARCEL',appChi:'Floran',appData:'2026-07-01',appOra:'09:30',evolexOk:true,evolexNum:'46205/418',gestoprevOk:true,gestoprevNum:'46206/1472',note:'Sopralluogo per impianto Zona Industriale Saint Marcel cdz 0165764085',feedback:''},
+  {id:'19',chiamata:'2026-06-30',stato:'PREVENTIVO INVIATO',cliente:'BONEL GIANNI',tipo:'PRIVATO',richiesta:'CDZ',localita:'ARNAD',appChi:'Floran',appData:'2026-06-29',appOra:'10:00',evolexOk:true,evolexNum:'46207/426',gestoprevOk:true,gestoprevNum:'46209/1481',note:'FRAZ. CLOS 17 ARNAD 3662884765 bonelandrea@gmail.com',feedback:''},
+  {id:'20',chiamata:'2026-06-30',stato:'NON PIU INTERESSATO',cliente:'D\'ARRIGO GEMMA',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'07/07 Ha già fatto',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Sopralluogo per impianto su pred gia\' fatta Rue de Fermes 4 Aosta 329-0129816 alle 14,00',feedback:'07/07/26 ho chiamato per fissare sopralluogo mi ha risposto che ringrazia ma ha già fatto'},
+  {id:'21',chiamata:'2026-06-26',stato:'PREVENTIVO INVIATO',cliente:'TUNNEL MONTE BIANCO',tipo:'SOCIETA',richiesta:'CDZ',localita:'COURMAYEUR',appChi:'Floran',appData:'2026-06-04',appOra:'09:00',evolex:'46182/336',gestoprev:'46185/128',note:'',feedback:''},
+  {id:'22',chiamata:'2026-06-05',stato:'PREVENTIVO INVIATO',cliente:'CAFFE DELLA POSTA CARTER&CARTER SRL',tipo:'SOCIETA',richiesta:'CDZ',localita:'COURMAYEUR',appChi:'Floran',appData:'2026-05-04',appOra:'11:00',evolex:'46184/345',gestoprev:'',note:'VIA ROMA 51 COURMAYEUR Enrico 3923022002 Angelica + contare frighi per contratto manutenzione',feedback:''},
+  {id:'23',chiamata:'2026-05-19',stato:'PREVENTIVO INVIATO',cliente:'BAR GOU',tipo:'SOCIETA',richiesta:'CDZ',localita:'COURMAYEUR',appChi:'Floran',appData:'2026-05-19',appOra:'10:00',evolex:'46167/292',gestoprev:'46168/1124',note:'',feedback:''},
+  {id:'24',chiamata:'2026-04-14',stato:'PREVENTIVO INVIATO',cliente:'LA MORAINE ENCHANTE',tipo:'SOCIETA',richiesta:'POMPA DI CALORE',localita:'GRESSAN',appChi:'Floran',appData:'2026-04-14',appOra:'09:30',evolex:'46156/268',gestoprev:'46157/1017',note:'Chiamare Stefano Viola 3493669986',feedback:''},
+  {id:'25',chiamata:'2026-04-01',stato:'PREVENTIVO INVIATO',cliente:'CENTRO ADDESTRAMENTO ALPINI',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-05-19',appOra:'14:30',evolex:'46177/314',gestoprev:'46178/1200',note:'Castello cantore c/o Scuola Militare Alpina 17 Aosta Magg. Caruso 3283399282',feedback:''},
+];
+
+// ===== UTILITIES =====
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function parseAppDate(d) { if (!d) return null; try { return new Date(d); } catch { return null; } }
+function fmtDate(d) {
+  if (!d) return '';
+  const p = d.split('-'); if (p.length !== 3) return d;
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+function statoClass(s) {
+  if (!s) return 'stato-vuoto';
+  const sl = s.toUpperCase();
+  if (sl.includes('SOPRALLUOGO')) return 'stato-sopralluogo';
+  if (sl.includes('PREVENTIVO INVIATO')) return 'stato-preventivo';
+  if (sl.includes('ACCETTATO')) return 'stato-accettato';
+  if (sl.includes('NON PIU') || sl.includes('INTERESSATO')) return 'stato-nonpiu';
+  if (sl.includes('NON CREATO')) return 'stato-noncreato';
+  return 'stato-vuoto';
+}
+function statoShort(s) {
+  if (!s) return '—';
+  const m = {
+    'SOPRALLUOGO NON FATTO': 'Sopralluogo',
+    'PREVENTIVO INVIATO': 'Preventivo inviato',
+    'PREVENTIVO ACCETTATO': 'Accettato ✓',
+    'NON PIU INTERESSATO': 'Non interessato',
+    'NON CREATO': 'Non creato',
+  };
+  return m[s] || s;
+}
+function gestBadge(r) {
+  const ev = r.evolexOk || r.evolex; // compatibilità vecchi dati
+  const gp = r.gestoprevOk || r.gestoprev;
+  const evNum = r.evolexNum || r.evolex || '';
+  const gpNum = r.gestoprevNum || r.gestoprev || '';
+  const evTitle = ev && evNum ? ' title="'+evNum+'"' : '';
+  const gpTitle = gp && gpNum ? ' title="'+gpNum+'"' : '';
+  return `<span class="gest-badge ${ev?'gest-ev-si':'gest-ev-no'}"${evTitle}>${ev?'EV ✓':'EV —'}</span>`
+       + `<span class="gest-badge ${gp?'gest-gp-si':'gest-gp-no'}"${gpTitle}>${gp?'GP ✓':'GP —'}</span>`;
+}
+function tipoClass(t) {
+  if (!t) return 'tipo-altro';
+  const tu = t.toUpperCase();
+  if (tu === 'PRIVATO' || tu === 'PRIVATA') return 'tipo-privato';
+  if (tu === 'SOCIETA' || tu === 'SOCIETÀ') return 'tipo-societa';
+  return 'tipo-altro';
+}
+function appDateClass(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr); const t = new Date(); t.setHours(0,0,0,0);
+  const dd = new Date(d); dd.setHours(0,0,0,0);
+  if (dd < t) return 'app-passato';
+  if (dd.getTime() === t.getTime()) return 'app-oggi';
+  return 'app-futuro';
+}
+
+// ===== FILTER & SORT =====
+function getFiltered() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const fs = document.getElementById('f-stato').value;
+  const ft = document.getElementById('f-tipo').value;
+  const fr = document.getElementById('f-rich').value;
+  const ftec = document.getElementById('f-tec').value;
+
+  return records.filter(r => {
+    if (q && !JSON.stringify(r).toLowerCase().includes(q)) return false;
+    if (fs) {
+      if (fs === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
+      else if (r.stato !== fs) return false;
+    }
+    if (ft && r.tipo?.toUpperCase() !== ft.toUpperCase()) return false;
+    if (fr && !r.richiesta?.toUpperCase().includes(fr.toUpperCase())) return false;
+    if (ftec && !r.appChi?.toLowerCase().includes(ftec.toLowerCase())) return false;
+    if (activeFilter) {
+      if (activeFilter === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
+      else if (r.stato !== activeFilter) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    let va = a[sortCol] || ''; let vb = b[sortCol] || '';
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  event.currentTarget.classList.add('sorted');
+  event.currentTarget.querySelector('.sort-arrow').textContent = sortAsc ? '↑' : '↓';
+  renderTable();
+}
+
+// ===== RENDER TABLE =====
+function renderTable() {
+  const data = getFiltered();
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty-state');
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    tbody.innerHTML = data.map(r => `
+      <tr class="${r.id === selectedId ? 'selected' : ''}" onclick="selectRecord('${r.id}')">
+        <td><span style="font-size:11.5px;color:var(--text2)">${fmtDate(r.chiamata)}</span></td>
+        <td><span class="stato ${statoClass(r.stato)}">${statoShort(r.stato)}</span></td>
+        <td><div class="cell-clip" style="max-width:180px;font-weight:500" title="${r.cliente||''}">${r.cliente || '—'}</div></td>
+        <td><span class="tipo ${tipoClass(r.tipo)}">${r.tipo || '—'}</span></td>
+        <td><span class="rich">${r.richiesta || '—'}</span></td>
+        <td><span style="font-size:12px;color:var(--text2)">${r.localita || '—'}</span></td>
+        <td>${r.appData ? `<div class="app-cell"><div class="app-chi">${r.appChi||''}</div><div class="app-data ${appDateClass(r.appData)}">${fmtDate(r.appData)}${r.appOra?' h.'+r.appOra:''}</div></div>` : (r.appChi?`<span style="color:var(--text3);font-size:11px">${r.appChi}</span>`:'<span style="color:var(--text3)">—</span>')}</td>
+        <td><div class="gest-wrap">${gestBadge(r)}</div></td>
+        <td><div class="cell-clip" style="max-width:200px;font-size:11.5px;color:var(--text2)" title="${r.note||''}">${r.note||'—'}</div></td>
+        <td>
+          <div class="row-actions">
+            <button class="row-act-btn" onclick="event.stopPropagation();openEdit('${r.id}')">✏️</button>
+            <button class="row-act-btn del" onclick="event.stopPropagation();deleteRecord('${r.id}')">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+  updateStats();
+  updateSidebar();
+  renderDetail();
+  updateOggiBanner();
+  if (currentView === 'kanban') renderKanban();
+}
+
+// ===== STATS =====
+function updateStats() {
+  const all = records;
+  document.getElementById('st1').textContent = all.filter(r=>r.stato==='SOPRALLUOGO NON FATTO').length;
+  document.getElementById('st2').textContent = all.filter(r=>r.stato==='PREVENTIVO INVIATO').length;
+  document.getElementById('st3').textContent = all.filter(r=>r.stato?.includes('ACCETTATO')).length;
+  document.getElementById('st4').textContent = all.filter(r=>r.stato==='NON PIU INTERESSATO').length;
+  document.getElementById('st5').textContent = all.length;
+}
+
+function updateSidebar() {
+  document.getElementById('badge-all').textContent = records.length;
+  document.getElementById('badge-sopr').textContent = records.filter(r=>r.stato==='SOPRALLUOGO NON FATTO').length;
+  document.getElementById('badge-prev').textContent = records.filter(r=>r.stato==='PREVENTIVO INVIATO').length;
+  document.getElementById('badge-acc').textContent = records.filter(r=>r.stato?.includes('ACCETTATO')).length;
+  document.getElementById('badge-npi').textContent = records.filter(r=>r.stato==='NON PIU INTERESSATO').length;
+
+  // Tecnici
+  const tecnici = [...new Set(records.map(r=>r.appChi).filter(t=>t&&t.length<30&&!t.includes('/')))].sort();
+  const fTec = document.getElementById('f-tec');
+  const curVal = fTec.value;
+  fTec.innerHTML = '<option value="">Tutti i tecnici</option>' + tecnici.map(t=>`<option value="${t}">${t}</option>`).join('');
+  fTec.value = curVal;
+
+  const sb = document.getElementById('sidebar-tecnici');
+  sb.innerHTML = tecnici.slice(0,8).map(t => `<div class="nav-item" onclick="setTecnico('${t}',this)"><span class="icon">👤</span>${t}<span class="badge" style="background:var(--text3)">${records.filter(r=>r.appChi===t).length}</span></div>`).join('');
+}
+
+function setTecnico(t, el) {
+  document.getElementById('f-tec').value = t;
+  renderTable();
+}
+
+// ===== OGGI BANNER =====
+function updateOggiBanner() {
+  const t = today();
+  const oggi = records.filter(r => r.appData === t);
+  const banner = document.getElementById('oggi-banner');
+  const items = document.getElementById('oggi-items');
+  if (oggi.length === 0) { banner.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  items.innerHTML = oggi.map(r => `
+    <div class="oggi-item" onclick="selectRecord('${r.id}')">
+      <span class="oggi-ora">${r.appOra||'?'}</span>
+      <span>${r.cliente||'?'}</span>
+      <span style="color:var(--text3)">${r.localita||''}</span>
+      <span style="color:var(--text2)">${r.appChi||''}</span>
+    </div>
+  `).join('');
+  // NOTIFICA
+  scheduleNotifiche(oggi);
+}
+
+// ===== NOTIFICHE BROWSER =====
+function scheduleNotifiche(oggiList) {
+  if (!('Notification' in window)) return;
+  const nc = document.getElementById('notif-count');
+  nc.style.display = oggiList.length > 0 ? '' : 'none';
+  nc.textContent = oggiList.length;
+  document.getElementById('badge-all').style.background = '';
+}
+
+async function richiediNotifiche() {
+  if (!('Notification' in window)) { toast('Il browser non supporta le notifiche','error'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    toast('Notifiche attivate! Riceverai avvisi per gli appuntamenti di oggi.','success');
+    checkAndNotify();
+  } else {
+    toast('Permesso notifiche negato. Abilita nelle impostazioni del browser.','warn');
+  }
+}
+
+function checkAndNotify() {
+  const t = today();
+  const now = new Date();
+  records.filter(r => r.appData === t && r.appOra).forEach(r => {
+    const [hh,mm] = r.appOra.split(':').map(Number);
+    const appTime = new Date(); appTime.setHours(hh,mm,0,0);
+    const diff = appTime - now;
+    const preavviso = 15 * 60 * 1000;
+    if (diff > 0 && diff <= preavviso + 60000) {
+      new Notification('Appuntamento tra ' + Math.round(diff/60000) + ' min!', {
+        body: r.cliente + ' · ' + r.localita + ' · ' + r.appOra,
+        icon: '⚡', tag: r.id
+      });
+    }
+  });
+  setTimeout(checkAndNotify, 60000);
+}
+
+// ===== SELECT / DETAIL =====
+function selectRecord(id) {
+  selectedId = selectedId === id ? null : id;
+  renderTable();
+}
+
+function renderDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!selectedId) { panel.classList.add('hidden'); return; }
+  const r = records.find(x => x.id === selectedId);
+  if (!r) { panel.classList.add('hidden'); return; }
+  panel.classList.remove('hidden');
+  panel.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-name">${r.cliente || '—'}</div>
+      <div class="detail-sub" style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <span class="stato ${statoClass(r.stato)}">${statoShort(r.stato)}</span>
+        <span class="tipo ${tipoClass(r.tipo)}">${r.tipo||''}</span>
+        <span class="rich">${r.richiesta||''}</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>Dati pratica</h4>
+      <div class="detail-row"><span class="detail-key">Data chiamata</span><span class="detail-val">${fmtDate(r.chiamata)}</span></div>
+      <div class="detail-row"><span class="detail-key">Località</span><span class="detail-val">${r.localita||'—'}</span></div>
+      <div class="detail-row">
+        <span class="detail-key">Evolex</span>
+        <span class="detail-val" style="display:flex;align-items:center;gap:6px">
+          <span class="gest-badge ${r.evolexOk?'gest-ev-si':'gest-ev-no'}">${r.evolexOk?'EV ✓':'EV —'}</span>
+          ${r.evolexOk&&r.evolexNum?`<span style="font-family:monospace;font-size:12px">${r.evolexNum}</span>`:''}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Gestoprev</span>
+        <span class="detail-val" style="display:flex;align-items:center;gap:6px">
+          <span class="gest-badge ${r.gestoprevOk?'gest-gp-si':'gest-gp-no'}">${r.gestoprevOk?'GP ✓':'GP —'}</span>
+          ${r.gestoprevOk&&r.gestoprevNum?`<span style="font-family:monospace;font-size:12px">${r.gestoprevNum}</span>`:''}
+        </span>
+      </div>
+    </div>
+    ${r.appData||r.appChi ? `<div class="detail-section">
+      <h4>Appuntamento</h4>
+      <div class="detail-row"><span class="detail-key">Tecnico</span><span class="detail-val" style="color:var(--accent2);font-weight:600">${r.appChi||'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Data</span><span class="detail-val ${appDateClass(r.appData)}" style="font-weight:600">${fmtDate(r.appData)||'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Ora</span><span class="detail-val">${r.appOra||'—'}</span></div>
+    </div>` : ''}
+    ${r.note ? `<div class="detail-section">
+      <h4>Note</h4>
+      <div class="detail-note">${r.note.replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+    ${r.feedback ? `<div class="detail-section">
+      <h4>Feedback</h4>
+      <div class="detail-note" style="border-left:2px solid var(--warn);padding-left:10px">${r.feedback.replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+    <div class="detail-actions">
+      <button class="btn primary" onclick="openEdit('${r.id}')" style="width:100%;justify-content:center">✏️ Modifica pratica</button>
+      <div style="display:flex;gap:6px">
+        ${r.stato !== 'PREVENTIVO ACCETTATO' ? `<button class="btn success" onclick="cambiaStato('${r.id}','PREVENTIVO ACCETTATO')" style="flex:1;justify-content:center">✅ Accetta</button>` : ''}
+        ${r.stato !== 'NON PIU INTERESSATO' ? `<button class="btn" onclick="cambiaStato('${r.id}','NON PIU INTERESSATO')" style="flex:1;justify-content:center;color:var(--danger)">❌ Non interessato</button>` : ''}
+      </div>
+      <button class="btn" onclick="deleteRecord('${r.id}')" style="border-color:var(--danger);color:var(--danger);justify-content:center">🗑 Elimina</button>
+    </div>
+  `;
+}
+
+function cambiaStato(id, nuovoStato) {
+  const r = records.find(x=>x.id===id);
+  if (!r) return;
+  r.stato = nuovoStato;
+  save();
+  renderTable();
+  toast('Stato aggiornato: ' + nuovoStato, 'success');
+}
+
+// ===== KANBAN =====
+const KANBAN_COLS = [
+  {key:'SOPRALLUOGO NON FATTO', label:'Sopralluogo', color:'var(--warn)'},
+  {key:'PREVENTIVO INVIATO', label:'Preventivo inviato', color:'var(--accent)'},
+  {key:'PREVENTIVO ACCETTATO', label:'Accettato ✓', color:'var(--accent2)'},
+  {key:'NON PIU INTERESSATO', label:'Non interessato', color:'var(--danger)'},
+  {key:'__altri', label:'Altro', color:'var(--text3)'},
+];
+function renderKanban() {
+  const data = getFiltered();
+  const wrap = document.getElementById('kanban-wrap');
+  wrap.innerHTML = KANBAN_COLS.map(col => {
+    const cards = col.key === '__altri'
+      ? data.filter(r => !KANBAN_COLS.slice(0,-1).some(c=>c.key===r.stato))
+      : data.filter(r => r.stato === col.key);
+    return `
+      <div class="kanban-col">
+        <div class="kanban-col-header" style="border-top:2px solid ${col.color}">
+          <span style="color:${col.color}">${col.label}</span>
+          <span style="color:var(--text3)">${cards.length}</span>
+        </div>
+        <div class="kanban-cards">
+          ${cards.length===0 ? '<div style="color:var(--text3);font-size:11px;padding:8px;text-align:center">Nessuna</div>' :
+            cards.map(r=>`
+              <div class="kanban-card" onclick="selectRecord('${r.id}');if(currentView==='kanban')switchView('table',null)">
+                <div class="kanban-card-name">${r.cliente||'—'}</div>
+                <div class="kanban-card-sub">${r.localita||''} · <span class="rich">${r.richiesta||''}</span></div>
+                ${r.appData ? `<div class="kanban-card-app ${appDateClass(r.appData)}" style="font-size:11px">📅 ${fmtDate(r.appData)} ${r.appOra||''} <span style="color:var(--accent2)">${r.appChi||''}</span></div>` : ''}
+              </div>
+            `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== VIEWS =====
+function switchView(v, el) {
+  currentView = v;
+  document.getElementById('view-table').style.display = v==='table' ? 'flex' : 'none';
+  document.getElementById('view-kanban').style.display = v==='kanban' ? 'flex' : 'none';
+  document.getElementById('vb-table').classList.toggle('active', v==='table');
+  document.getElementById('vb-kanban').classList.toggle('active', v==='kanban');
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=>n.classList.toggle('active', n.dataset.view===v));
+  if (v==='kanban') renderKanban();
+}
+
+// ===== MODAL =====
+function openNew() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = '+ Nuova pratica';
+  clearForm();
+  document.getElementById('f-chiamata').value = today();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function openEdit(id) {
+  const r = records.find(x=>x.id===id);
+  if (!r) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Modifica: ' + (r.cliente||'');
+  document.getElementById('f-chiamata').value = r.chiamata||'';
+  document.getElementById('f-stato2').value = r.stato||'';
+  document.getElementById('f-cliente').value = r.cliente||'';
+  document.getElementById('f-tipo2').value = r.tipo||'';
+  document.getElementById('f-rich2').value = r.richiesta||'';
+  document.getElementById('f-localita').value = r.localita||'';
+  document.getElementById('f-app-chi').value = r.appChi||'';
+  document.getElementById('f-app-data').value = r.appData||'';
+  document.getElementById('f-app-ora').value = r.appOra||'';
+  document.getElementById('f-evolex-ok').checked = !!r.evolexOk;
+  document.getElementById('f-evolex-num').value = r.evolexNum||'';
+  document.getElementById('f-evolex-num').disabled = !r.evolexOk;
+  document.getElementById('f-gestoprev-ok').checked = !!r.gestoprevOk;
+  document.getElementById('f-gestoprev-num').value = r.gestoprevNum||'';
+  document.getElementById('f-gestoprev-num').disabled = !r.gestoprevOk;
+  document.getElementById('f-note').value = r.note||'';
+  document.getElementById('f-feedback').value = r.feedback||'';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function clearForm() {
+  ['f-chiamata','f-stato2','f-cliente','f-tipo2','f-rich2','f-localita','f-app-chi','f-app-data','f-app-ora','f-evolex-num','f-gestoprev-num','f-note','f-feedback'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('f-evolex-ok').checked = false;
+  document.getElementById('f-gestoprev-ok').checked = false;
+  document.getElementById('f-evolex-num').disabled = true;
+  document.getElementById('f-gestoprev-num').disabled = true;
+}
+function toggleGestField(which) {
+  const ok = document.getElementById('f-'+which+'-ok').checked;
+  const num = document.getElementById('f-'+which+'-num');
+  num.disabled = !ok;
+  if (!ok) num.value = '';
+  if (ok) num.focus();
+}
+function saveRecord() {
+  const cliente = document.getElementById('f-cliente').value.trim();
+  if (!cliente) { toast('Inserisci il nome del cliente','warn'); return; }
+  const data = {
+    chiamata: document.getElementById('f-chiamata').value,
+    stato: document.getElementById('f-stato2').value,
+    cliente,
+    tipo: document.getElementById('f-tipo2').value,
+    richiesta: document.getElementById('f-rich2').value,
+    localita: document.getElementById('f-localita').value.toUpperCase(),
+    appChi: document.getElementById('f-app-chi').value,
+    appData: document.getElementById('f-app-data').value,
+    appOra: document.getElementById('f-app-ora').value,
+    evolexOk: document.getElementById('f-evolex-ok').checked,
+    evolexNum: document.getElementById('f-evolex-num').value.trim(),
+    gestoprevOk: document.getElementById('f-gestoprev-ok').checked,
+    gestoprevNum: document.getElementById('f-gestoprev-num').value.trim(),
+    note: document.getElementById('f-note').value,
+    feedback: document.getElementById('f-feedback').value,
+  };
+  if (editingId) {
+    const idx = records.findIndex(x=>x.id===editingId);
+    if (idx>=0) records[idx] = {...records[idx], ...data};
+    toast('Pratica aggiornata', 'success');
+  } else {
+    records.unshift({id: uid(), ...data});
+    toast('Nuova pratica aggiunta', 'success');
+  }
+  save();
+  closeModalForce();
+  renderTable();
+}
+function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalForce(); }
+function closeModalForce() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+// ===== DELETE =====
+function deleteRecord(id) {
+  if (!confirm('Eliminare questa pratica?')) return;
+  records = records.filter(x=>x.id!==id);
+  if (selectedId === id) selectedId = null;
+  save();
+  renderTable();
+  toast('Pratica eliminata','error');
+}
+
+// ===== SIDEBAR FILTER =====
+function filterSidebar(stato, el) {
+  activeFilter = activeFilter === stato ? '' : stato;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderTable();
+}
+
+// ===== EXPORT / IMPORT =====
+function exportCSV() {
+  const headers = ['id','chiamata','stato','cliente','tipo','richiesta','localita','appChi','appData','appOra','evolex','gestoprev','note','feedback'];
+  const rows = records.map(r => headers.map(h => '"'+(r[h]||'').replace(/"/g,'""')+'"').join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = 'gestprev_'+today()+'.csv';
+  a.click();
+  toast('Esportazione CSV completata','success');
+}
+function importData() {
+  if (!confirm('L\'importazione JSON sovrascrive tutti i dati esistenti. Continuare?')) return;
+  document.getElementById('file-import').click();
+}
+function handleImport(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (Array.isArray(data)) { records = data; save(); renderTable(); toast('Dati importati: '+records.length+' pratiche','success'); }
+      else toast('Formato JSON non valido','error');
+    } catch { toast('Errore nella lettura del file','error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ===== TOAST =====
+function toast(msg, type='success') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type||'');
+  t.innerHTML = `<span>${type==='success'?'✅':type==='warn'?'⚠️':'❌'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+// ===== NOTIF BUTTON =====
+document.getElementById('btn-notif').addEventListener('click', richiediNotifiche);
+document.getElementById('btn-new').addEventListener('click', openNew);
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModalForce(); selectedId=null; renderDetail(); }
+  if (e.key === 'n' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') openNew();
+});
+
+// ===== INIT =====
+load();
+renderTable();
+updateOggiBanner();
+setTimeout(()=>{ if(Notification.permission==='granted') checkAndNotify(); }, 2000);
+</script>
+</body>
+</html>
