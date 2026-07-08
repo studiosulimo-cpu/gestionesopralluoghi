@@ -227,20 +227,34 @@
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Filtra stato</div>
-      <div class="nav-item" onclick="filterSidebar('',this)">
+      <div class="nav-item" data-filter-stato="" onclick="filterSidebar('',this)">
         <span class="icon">📋</span> Tutti
       </div>
-      <div class="nav-item" onclick="filterSidebar('SOPRALLUOGO NON FATTO',this)">
+      <div class="nav-item" data-filter-stato="SOPRALLUOGO NON FATTO" onclick="filterSidebar('SOPRALLUOGO NON FATTO',this)">
         <span class="icon">📍</span> Sopralluogo <span id="badge-sopr" class="badge warn">0</span>
       </div>
-      <div class="nav-item" onclick="filterSidebar('PREVENTIVO INVIATO',this)">
+      <div class="nav-item" data-filter-stato="PREVENTIVO INVIATO" onclick="filterSidebar('PREVENTIVO INVIATO',this)">
         <span class="icon">📄</span> Preventivo <span id="badge-prev" class="badge">0</span>
       </div>
-      <div class="nav-item" onclick="filterSidebar('ACCETTATO',this)">
+      <div class="nav-item" data-filter-stato="ACCETTATO" onclick="filterSidebar('ACCETTATO',this)">
         <span class="icon">✅</span> Accettati <span id="badge-acc" class="badge" style="background:var(--accent2)">0</span>
       </div>
-      <div class="nav-item" onclick="filterSidebar('NON PIU INTERESSATO',this)">
+      <div class="nav-item" data-filter-stato="NON PIU INTERESSATO" onclick="filterSidebar('NON PIU INTERESSATO',this)">
         <span class="icon">❌</span> Non interessati <span id="badge-npi" class="badge danger">0</span>
+      </div>
+
+      <div class="sidebar-section" style="margin-top:8px">Gestionale</div>
+      <div class="nav-item" data-filter-gest="ev-si" onclick="filterGest('ev','si',this)">
+        <span class="icon"><span class="gest-badge gest-ev-si" style="font-size:9px">EV ✓</span></span> Evolex inserito <span id="badge-ev-si" class="badge" style="background:var(--accent2)">0</span>
+      </div>
+      <div class="nav-item" data-filter-gest="ev-no" onclick="filterGest('ev','no',this)">
+        <span class="icon"><span class="gest-badge gest-ev-no" style="font-size:9px">EV —</span></span> Evolex mancante <span id="badge-ev-no" class="badge warn">0</span>
+      </div>
+      <div class="nav-item" data-filter-gest="gp-si" onclick="filterGest('gp','si',this)">
+        <span class="icon"><span class="gest-badge gest-gp-si" style="font-size:9px">GP ✓</span></span> Gestoprev inserito <span id="badge-gp-si" class="badge" style="background:var(--accent)">0</span>
+      </div>
+      <div class="nav-item" data-filter-gest="gp-no" onclick="filterGest('gp','no',this)">
+        <span class="icon"><span class="gest-badge gest-gp-no" style="font-size:9px">GP —</span></span> Gestoprev mancante <span id="badge-gp-no" class="badge warn">0</span>
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Tecnico</div>
@@ -298,6 +312,16 @@
         </select>
         <select id="f-tec" onchange="renderTable()">
           <option value="">Tutti i tecnici</option>
+        </select>
+        <select id="f-ev" onchange="renderTable()">
+          <option value="">Evolex: tutti</option>
+          <option value="si">EV ✓ inserito</option>
+          <option value="no">EV — mancante</option>
+        </select>
+        <select id="f-gp" onchange="renderTable()">
+          <option value="">Gestoprev: tutti</option>
+          <option value="si">GP ✓ inserito</option>
+          <option value="no">GP — mancante</option>
         </select>
         <div class="view-toggle">
           <button class="view-btn active" id="vb-table" onclick="switchView('table',null)">☰</button>
@@ -466,6 +490,7 @@ let editingId = null;
 let sortCol = 'chiamata';
 let sortAsc = false;
 let activeFilter = '';
+let activeGestFilter = '';
 let currentView = 'table';
 let selectedId = null;
 
@@ -580,19 +605,37 @@ function getFiltered() {
   const ft = document.getElementById('f-tipo').value;
   const fr = document.getElementById('f-rich').value;
   const ftec = document.getElementById('f-tec').value;
+  const fev = document.getElementById('f-ev').value;
+  const fgp = document.getElementById('f-gp').value;
 
   return records.filter(r => {
     if (q && !JSON.stringify(r).toLowerCase().includes(q)) return false;
+    // filtro stato dalla toolbar
     if (fs) {
       if (fs === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
       else if (r.stato !== fs) return false;
     }
-    if (ft && r.tipo?.toUpperCase() !== ft.toUpperCase()) return false;
-    if (fr && !r.richiesta?.toUpperCase().includes(fr.toUpperCase())) return false;
-    if (ftec && !r.appChi?.toLowerCase().includes(ftec.toLowerCase())) return false;
+    // filtro stato dalla sidebar (indipendente dalla toolbar)
     if (activeFilter) {
       if (activeFilter === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
       else if (r.stato !== activeFilter) return false;
+    }
+    if (ft && r.tipo?.toUpperCase() !== ft.toUpperCase()) return false;
+    if (fr && !r.richiesta?.toUpperCase().includes(fr.toUpperCase())) return false;
+    if (ftec && !r.appChi?.toLowerCase().includes(ftec.toLowerCase())) return false;
+    // filtri EV/GP dalla toolbar
+    const evOk = !!(r.evolexOk || r.evolex);
+    const gpOk = !!(r.gestoprevOk || r.gestoprev);
+    if (fev === 'si' && !evOk) return false;
+    if (fev === 'no' && evOk) return false;
+    if (fgp === 'si' && !gpOk) return false;
+    if (fgp === 'no' && gpOk) return false;
+    // filtri EV/GP dalla sidebar
+    if (activeGestFilter) {
+      if (activeGestFilter === 'ev-si' && !evOk) return false;
+      if (activeGestFilter === 'ev-no' && evOk) return false;
+      if (activeGestFilter === 'gp-si' && !gpOk) return false;
+      if (activeGestFilter === 'gp-no' && gpOk) return false;
     }
     return true;
   }).sort((a,b) => {
@@ -666,6 +709,24 @@ function updateSidebar() {
   document.getElementById('badge-acc').textContent = records.filter(r=>r.stato?.includes('ACCETTATO')).length;
   document.getElementById('badge-npi').textContent = records.filter(r=>r.stato==='NON PIU INTERESSATO').length;
 
+  // contatori EV/GP
+  const evSi = records.filter(r=>!!(r.evolexOk||r.evolex)).length;
+  const evNo = records.filter(r=>!(r.evolexOk||r.evolex)).length;
+  const gpSi = records.filter(r=>!!(r.gestoprevOk||r.gestoprev)).length;
+  const gpNo = records.filter(r=>!(r.gestoprevOk||r.gestoprev)).length;
+  document.getElementById('badge-ev-si').textContent = evSi;
+  document.getElementById('badge-ev-no').textContent = evNo;
+  document.getElementById('badge-gp-si').textContent = gpSi;
+  document.getElementById('badge-gp-no').textContent = gpNo;
+
+  // sincronizza active sidebar gest con toolbar select (se utente usa la select)
+  const fev = document.getElementById('f-ev').value;
+  const fgp = document.getElementById('f-gp').value;
+  if (!fev && !fgp) {
+    activeGestFilter = '';
+    document.querySelectorAll('.nav-item[data-filter-gest]').forEach(n=>n.classList.remove('active'));
+  }
+
   // Tecnici
   const tecnici = [...new Set(records.map(r=>r.appChi).filter(t=>t&&t.length<30&&!t.includes('/')))].sort();
   const fTec = document.getElementById('f-tec');
@@ -674,7 +735,10 @@ function updateSidebar() {
   fTec.value = curVal;
 
   const sb = document.getElementById('sidebar-tecnici');
-  sb.innerHTML = tecnici.slice(0,8).map(t => `<div class="nav-item" onclick="setTecnico('${t}',this)"><span class="icon">👤</span>${t}<span class="badge" style="background:var(--text3)">${records.filter(r=>r.appChi===t).length}</span></div>`).join('');
+  sb.innerHTML = tecnici.slice(0,8).map(t => {
+    const isActive = fTec.value === t;
+    return `<div class="nav-item ${isActive?'active':''}" onclick="setTecnico('${t}',this)"><span class="icon">👤</span>${t}<span class="badge" style="background:var(--text3)">${records.filter(r=>r.appChi===t).length}</span></div>`;
+  }).join('');
 }
 
 function setTecnico(t, el) {
@@ -957,15 +1021,35 @@ function deleteRecord(id) {
 // ===== SIDEBAR FILTER =====
 function filterSidebar(stato, el) {
   activeFilter = activeFilter === stato ? '' : stato;
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if (el) el.classList.add('active');
+  // rimuovi active solo dai nav-item di stato (non tecnici)
+  document.querySelectorAll('.nav-item[data-filter-stato]').forEach(n => n.classList.remove('active'));
+  if (el && activeFilter) el.classList.add('active');
+  renderTable();
+}
+
+function filterGest(tipo, val, el) {
+  const key = tipo + '-' + val;
+  activeGestFilter = activeGestFilter === key ? '' : key;
+  document.getElementById('f-' + tipo).value = activeGestFilter ? val : '';
+  document.querySelectorAll('.nav-item[data-filter-gest]').forEach(n => n.classList.remove('active'));
+  if (activeGestFilter && el) el.classList.add('active');
+  renderTable();
+}
+
+function setTecnico(t, el) {
+  const fTec = document.getElementById('f-tec');
+  if (fTec.value === t) {
+    fTec.value = '';
+  } else {
+    fTec.value = t;
+  }
   renderTable();
 }
 
 // ===== EXPORT / IMPORT =====
 function exportCSV() {
-  const headers = ['id','chiamata','stato','cliente','tipo','richiesta','localita','appChi','appData','appOra','evolex','gestoprev','note','feedback'];
-  const rows = records.map(r => headers.map(h => '"'+(r[h]||'').replace(/"/g,'""')+'"').join(','));
+  const headers = ['id','chiamata','stato','cliente','tipo','richiesta','localita','appChi','appData','appOra','evolexOk','evolexNum','gestoprevOk','gestoprevNum','note','feedback'];
+  const rows = records.map(r => headers.map(h => '"'+(r[h]!==undefined?String(r[h]):'').replace(/"/g,'""')+'"').join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
