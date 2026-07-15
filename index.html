@@ -227,33 +227,33 @@
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Filtra stato</div>
-      <div class="nav-item" data-filter-stato="" onclick="filterSidebar('',this)">
+      <div class="nav-item" data-filter-stato="" onclick="setSidebarFilter('stato','')">
         <span class="icon">📋</span> Tutti
       </div>
-      <div class="nav-item" data-filter-stato="SOPRALLUOGO NON FATTO" onclick="filterSidebar('SOPRALLUOGO NON FATTO',this)">
+      <div class="nav-item" data-filter-stato="SOPRALLUOGO NON FATTO" onclick="setSidebarFilter('stato','SOPRALLUOGO NON FATTO')">
         <span class="icon">📍</span> Sopralluogo <span id="badge-sopr" class="badge warn">0</span>
       </div>
-      <div class="nav-item" data-filter-stato="PREVENTIVO INVIATO" onclick="filterSidebar('PREVENTIVO INVIATO',this)">
+      <div class="nav-item" data-filter-stato="PREVENTIVO INVIATO" onclick="setSidebarFilter('stato','PREVENTIVO INVIATO')">
         <span class="icon">📄</span> Preventivo <span id="badge-prev" class="badge">0</span>
       </div>
-      <div class="nav-item" data-filter-stato="ACCETTATO" onclick="filterSidebar('ACCETTATO',this)">
+      <div class="nav-item" data-filter-stato="ACCETTATO" onclick="setSidebarFilter('stato','ACCETTATO')">
         <span class="icon">✅</span> Accettati <span id="badge-acc" class="badge" style="background:var(--accent2)">0</span>
       </div>
-      <div class="nav-item" data-filter-stato="NON PIU INTERESSATO" onclick="filterSidebar('NON PIU INTERESSATO',this)">
+      <div class="nav-item" data-filter-stato="NON PIU INTERESSATO" onclick="setSidebarFilter('stato','NON PIU INTERESSATO')">
         <span class="icon">❌</span> Non interessati <span id="badge-npi" class="badge danger">0</span>
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Gestionale</div>
-      <div class="nav-item" data-filter-gest="ev-si" onclick="filterGest('ev','si',this)">
+      <div class="nav-item" data-filter-gest="ev-si" onclick="setSidebarFilter('gest','ev-si')">
         <span class="icon"><span class="gest-badge gest-ev-si" style="font-size:9px">EV ✓</span></span> Evolex inserito <span id="badge-ev-si" class="badge" style="background:var(--accent2)">0</span>
       </div>
-      <div class="nav-item" data-filter-gest="ev-no" onclick="filterGest('ev','no',this)">
+      <div class="nav-item" data-filter-gest="ev-no" onclick="setSidebarFilter('gest','ev-no')">
         <span class="icon"><span class="gest-badge gest-ev-no" style="font-size:9px">EV —</span></span> Evolex mancante <span id="badge-ev-no" class="badge warn">0</span>
       </div>
-      <div class="nav-item" data-filter-gest="gp-si" onclick="filterGest('gp','si',this)">
+      <div class="nav-item" data-filter-gest="gp-si" onclick="setSidebarFilter('gest','gp-si')">
         <span class="icon"><span class="gest-badge gest-gp-si" style="font-size:9px">GP ✓</span></span> Gestoprev inserito <span id="badge-gp-si" class="badge" style="background:var(--accent)">0</span>
       </div>
-      <div class="nav-item" data-filter-gest="gp-no" onclick="filterGest('gp','no',this)">
+      <div class="nav-item" data-filter-gest="gp-no" onclick="setSidebarFilter('gest','gp-no')">
         <span class="icon"><span class="gest-badge gest-gp-no" style="font-size:9px">GP —</span></span> Gestoprev mancante <span id="badge-gp-no" class="badge warn">0</span>
       </div>
 
@@ -288,9 +288,9 @@
       <div class="toolbar">
         <div class="search-box">
           <span class="sicon">🔍</span>
-          <input type="text" id="search" placeholder="Cerca cliente, nota, località..." oninput="renderTable()">
+          <input type="text" id="search" placeholder="Cerca cliente, nota, località..." oninput="filters.search=this.value.toLowerCase().trim();renderTable()">
         </div>
-        <select id="f-stato" onchange="renderTable()">
+        <select id="f-stato" onchange="setToolbarFilter('stato',this.value)">
           <option value="">Tutti gli stati</option>
           <option>SOPRALLUOGO NON FATTO</option>
           <option>PREVENTIVO INVIATO</option>
@@ -298,27 +298,27 @@
           <option>NON PIU INTERESSATO</option>
           <option>NON CREATO</option>
         </select>
-        <select id="f-tipo" onchange="renderTable()">
+        <select id="f-tipo" onchange="setToolbarFilter('tipo',this.value)">
           <option value="">Tipo cliente</option>
           <option>PRIVATO</option>
           <option>SOCIETA</option>
         </select>
-        <select id="f-rich" onchange="renderTable()">
+        <select id="f-rich" onchange="setToolbarFilter('rich',this.value)">
           <option value="">Tutte le richieste</option>
           <option>CDZ</option>
           <option>PDC</option>
           <option>FV</option>
           <option>REFRIGERAZIONE</option>
         </select>
-        <select id="f-tec" onchange="renderTable()">
+        <select id="f-tec" onchange="setToolbarFilter('tec',this.value)">
           <option value="">Tutti i tecnici</option>
         </select>
-        <select id="f-ev" onchange="renderTable()">
+        <select id="f-ev" onchange="setSidebarFilter('gest', this.value==='si'?'ev-si':this.value==='no'?'ev-no':''); this.value=this.value">
           <option value="">Evolex: tutti</option>
           <option value="si">EV ✓ inserito</option>
           <option value="no">EV — mancante</option>
         </select>
-        <select id="f-gp" onchange="renderTable()">
+        <select id="f-gp" onchange="setSidebarFilter('gest', this.value==='si'?'gp-si':this.value==='no'?'gp-no':''); this.value=this.value">
           <option value="">Gestoprev: tutti</option>
           <option value="si">GP ✓ inserito</option>
           <option value="no">GP — mancante</option>
@@ -489,10 +489,18 @@ let records = [];
 let editingId = null;
 let sortCol = 'chiamata';
 let sortAsc = false;
-let activeFilter = '';
-let activeGestFilter = '';
 let currentView = 'table';
 let selectedId = null;
+
+// UNICA sorgente di verità per tutti i filtri
+const filters = {
+  search: '',
+  stato: '',
+  tec:   '',
+  gest:  '',   // 'ev-si' | 'ev-no' | 'gp-si' | 'gp-no' | ''
+  tipo:  '',
+  rich:  '',
+};
 
 // ===== STORAGE =====
 function save() {
@@ -514,31 +522,311 @@ function updateMeta() {
 
 // ===== INITIAL DATA (campione dal file Excel) =====
 const INITIAL_DATA = [
-  {id:'1',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'CESTARO CRISTINA',tipo:'PRIVATO',richiesta:'CDZ',localita:'QUART',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Tel 3474344260 (Contatto da Floran) Fraz Ecleroz - Quart',feedback:''},
-  {id:'2',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'A.N.A.S.',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Sopralluogo comunicato da Desandre per impianto deposito mezzi',feedback:''},
-  {id:'3',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'LUCIANI MATTEO',tipo:'PRIVATO',richiesta:'CDZ',localita:'SARRE',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'E\' il figlio di Torelli - fare sopralluoghi congiunti Fraz. Fachet 3 Sarre tel. 392509375 tardo pom',feedback:''},
-  {id:'4',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'VIVONA MATTEO',tipo:'PRIVATO',richiesta:'CDZ',localita:'SARRE',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Tel. 3342946767 Loc. Condemine, 57 - Sarre',feedback:''},
-  {id:'5',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'BEI - CARREFOUR EXPRESS',tipo:'SOCIETA',richiesta:'CDZ',localita:'CHATILLON',appChi:'Floran - Magri',appData:'2026-07-07',appOra:'15:30',evolex:'',gestoprev:'',note:'Richiesta sostituzione impianto di condizionamento via mail da BEI Marco Di Ceglie',feedback:''},
-  {id:'6',chiamata:'2026-07-06',stato:'SOPRALLUOGO NON FATTO',cliente:'GYPPAZ DENIS',tipo:'PRIVATO',richiesta:'CDZ',localita:'SARRE',appChi:'Floran',appData:'2026-07-14',appOra:'09:00',evolex:'',gestoprev:'',note:'Fraz. Poinsod 130 - Sarre - Contattato direttamente Floran',feedback:''},
-  {id:'7',chiamata:'2026-07-06',stato:'PREVENTIVO INVIATO',cliente:'BUSCHINO RACHELE - EMPORIO DELL\'AUTO',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-03',appOra:'16:30',evolexOk:true,evolexNum:'46210/438',gestoprevOk:false,gestoprevNum:'',note:'Sopralluogo su predisposizione gia\' fatta',feedback:''},
-  {id:'8',chiamata:'2026-07-04',stato:'PREVENTIVO INVIATO',cliente:'OSTINELLI ANDREA',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-01',appOra:'16:30',evolexOk:true,evolexNum:'46206/422',gestoprevOk:true,gestoprevNum:'46206/1473',note:'Via Festaz, 52 - Aosta contattato direttamente Floran',feedback:''},
-  {id:'9',chiamata:'2026-07-04',stato:'PREVENTIVO INVIATO',cliente:'MDM',tipo:'SOCIETA',richiesta:'CDZ',localita:'CHATILLON',appChi:'Ponessa-Magri',appData:'2026-07-01',appOra:'14:00',evolexOk:true,evolexNum:'46204/416',gestoprevOk:true,gestoprevNum:'46205/1464',note:'Hanno bisogno urgente di un sopralluogo per cdz in cabina elettrica chiamare Natalino 016661476',feedback:''},
-  {id:'10',chiamata:'2026-07-03',stato:'SOPRALLUOGO NON FATTO',cliente:'EUROSERVICE',tipo:'SOCIETA',richiesta:'CDZ',localita:'QUART',appChi:'',appData:'',appOra:'',evolex:'',gestoprev:'',note:'LOC AMERIQUE, 25 QUART STELLA 3389414798 PER SPOSTAMENTO CDZ',feedback:'06/07/26 Dice che siamo troppo cari'},
-  {id:'11',chiamata:'2026-07-03',stato:'SOPRALLUOGO NON FATTO',cliente:'FANIZZI STEFANIA',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-10',appOra:'11:30',evolex:'',gestoprev:'',note:'VIA MALHERBES 20 AOSTA tel 3284510919 condizionare camera da letto e soggiorno',feedback:''},
-  {id:'12',chiamata:'2026-07-02',stato:'PREVENTIVO INVIATO',cliente:'EDISON C/O OSPEDALE',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-07-02',appOra:'09:00',evolexOk:true,evolexNum:'46205/419',gestoprevOk:true,gestoprevNum:'46205/1470',note:'Camera 11 Ortopedia da sostituire condizionatore mail da Glarey dell\'Edison',feedback:''},
-  {id:'13',chiamata:'2026-07-02',stato:'SOPRALLUOGO NON FATTO',cliente:'GRANGE CHRISTINE',tipo:'PRIVATO',richiesta:'CDZ',localita:'QUART',appChi:'Floran',appData:'2026-07-08',appOra:'11:00',evolex:'',gestoprev:'',note:'Tel 3492990118 preventivo per sistema di condizionamento per casa 3 livelli da fare o di merc o giov o ven',feedback:''},
-  {id:'14',chiamata:'2026-07-02',stato:'SOPRALLUOGO NON FATTO',cliente:'DI FRANCESCO ANTONIO',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'Ponessa-Floran',appData:'2026-07-06',appOra:'',evolex:'',gestoprev:'',note:'Tel 3475233026 Reg. Bioula, 19/a - Aosta pdc+fotovoltaico',feedback:'aspettare per sopralluogo è mancata la moglie'},
-  {id:'15',chiamata:'2026-07-02',stato:'NON PIU INTERESSATO',cliente:'CAMBI GIUSEPPE',tipo:'PRIVATO',richiesta:'CDZ',localita:'SAINT MARCEL',appChi:'HA GIA\' PROVVEDUTO',appData:'',appOra:'',evolex:'',gestoprev:'',note:'TEL 3927050339 LOC. FAVERGE, 27 ST MARCEL',feedback:'07/07/26 L\'HO CONTATTATO PER IL SOPRALLUOGO ED HA GIA\' PROVVEDUTO VISTO CHE SIAMO STATI LENTI'},
-  {id:'16',chiamata:'2026-07-02',stato:'SOPRALLUOGO NON FATTO',cliente:'DUFOUR DANIELA',tipo:'PRIVATO',richiesta:'CDZ',localita:'SAINT VINCENT',appChi:'DA CONTATTARE A SETTEMBRE',appData:'',appOra:'',evolex:'',gestoprev:'',note:'TEL 3478219321 FRAZ. RONC SUPERIORE - casa vacanza',feedback:'07/07 E\' UNA CASA VACANZA FINO A SETTEMBRE'},
-  {id:'17',chiamata:'2026-07-01',stato:'PREVENTIVO INVIATO',cliente:'CONFIDÌ CENTRO NORD',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-06-30',appOra:'10:30',evolexOk:true,evolexNum:'46204/412',gestoprevOk:true,gestoprevNum:'46204/1459',note:'Sopralluogo per impianto nuovo Via Festaz, 79 0165548588',feedback:''},
-  {id:'18',chiamata:'2026-07-01',stato:'PREVENTIVO INVIATO',cliente:'CARPENTERIA GUOLO',tipo:'SOCIETA',richiesta:'CDZ',localita:'SAINT MARCEL',appChi:'Floran',appData:'2026-07-01',appOra:'09:30',evolexOk:true,evolexNum:'46205/418',gestoprevOk:true,gestoprevNum:'46206/1472',note:'Sopralluogo per impianto Zona Industriale Saint Marcel cdz 0165764085',feedback:''},
-  {id:'19',chiamata:'2026-06-30',stato:'PREVENTIVO INVIATO',cliente:'BONEL GIANNI',tipo:'PRIVATO',richiesta:'CDZ',localita:'ARNAD',appChi:'Floran',appData:'2026-06-29',appOra:'10:00',evolexOk:true,evolexNum:'46207/426',gestoprevOk:true,gestoprevNum:'46209/1481',note:'FRAZ. CLOS 17 ARNAD 3662884765 bonelandrea@gmail.com',feedback:''},
-  {id:'20',chiamata:'2026-06-30',stato:'NON PIU INTERESSATO',cliente:'D\'ARRIGO GEMMA',tipo:'PRIVATO',richiesta:'CDZ',localita:'AOSTA',appChi:'07/07 Ha già fatto',appData:'',appOra:'',evolex:'',gestoprev:'',note:'Sopralluogo per impianto su pred gia\' fatta Rue de Fermes 4 Aosta 329-0129816 alle 14,00',feedback:'07/07/26 ho chiamato per fissare sopralluogo mi ha risposto che ringrazia ma ha già fatto'},
-  {id:'21',chiamata:'2026-06-26',stato:'PREVENTIVO INVIATO',cliente:'TUNNEL MONTE BIANCO',tipo:'SOCIETA',richiesta:'CDZ',localita:'COURMAYEUR',appChi:'Floran',appData:'2026-06-04',appOra:'09:00',evolex:'46182/336',gestoprev:'46185/128',note:'',feedback:''},
-  {id:'22',chiamata:'2026-06-05',stato:'PREVENTIVO INVIATO',cliente:'CAFFE DELLA POSTA CARTER&CARTER SRL',tipo:'SOCIETA',richiesta:'CDZ',localita:'COURMAYEUR',appChi:'Floran',appData:'2026-05-04',appOra:'11:00',evolex:'46184/345',gestoprev:'',note:'VIA ROMA 51 COURMAYEUR Enrico 3923022002 Angelica + contare frighi per contratto manutenzione',feedback:''},
-  {id:'23',chiamata:'2026-05-19',stato:'PREVENTIVO INVIATO',cliente:'BAR GOU',tipo:'SOCIETA',richiesta:'CDZ',localita:'COURMAYEUR',appChi:'Floran',appData:'2026-05-19',appOra:'10:00',evolex:'46167/292',gestoprev:'46168/1124',note:'',feedback:''},
-  {id:'24',chiamata:'2026-04-14',stato:'PREVENTIVO INVIATO',cliente:'LA MORAINE ENCHANTE',tipo:'SOCIETA',richiesta:'POMPA DI CALORE',localita:'GRESSAN',appChi:'Floran',appData:'2026-04-14',appOra:'09:30',evolex:'46156/268',gestoprev:'46157/1017',note:'Chiamare Stefano Viola 3493669986',feedback:''},
-  {id:'25',chiamata:'2026-04-01',stato:'PREVENTIVO INVIATO',cliente:'CENTRO ADDESTRAMENTO ALPINI',tipo:'SOCIETA',richiesta:'CDZ',localita:'AOSTA',appChi:'Floran',appData:'2026-05-19',appOra:'14:30',evolex:'46177/314',gestoprev:'46178/1200',note:'Castello cantore c/o Scuola Militare Alpina 17 Aosta Magg. Caruso 3283399282',feedback:''},
+  {"id": "4", "chiamata": "2026-07-15", "stato": "SOPRALLUOGO NON FATTO", "cliente": "PASTICCERIA DE SANTIS", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Magri", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "impianto di climatizzazione abiadatico  (deve vedere Corrado)", "feedback": ""},
+  {"id": "5", "chiamata": "2026-07-15", "stato": "SOPRALLUOGO NON FATTO", "cliente": "DE GIROLAMO ENRICO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via Parigi Aosta da sostituire il CDZ", "feedback": ""},
+  {"id": "6", "chiamata": "2026-07-15", "stato": "SOPRALLUOGO NON FATTO", "cliente": "SICLARI CINZIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 15/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA CHAMBERY, 85  - AOSTA 3489174242 (CONTATTO DI FLORAN)", "feedback": ""},
+  {"id": "7", "chiamata": "2026-07-15", "stato": "SOPRALLUOGO NON FATTO", "cliente": "SERVODIDIO EMANUEL", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 15/07/26 h. 15,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA FESTAZ 29 AOSTA 3476772010 (CONTATTO DI FLORAN)", "feedback": ""},
+  {"id": "8", "chiamata": "2026-07-15", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CIOCCHETTI KATIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT CHRISTOPHE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Loc. Sorreley 4 - 11020 Saint Christophe 3498855740 marito marco.thiebat@gmail.com", "feedback": ""},
+  {"id": "9", "chiamata": "2026-07-14", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TOMA VALERIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "TEL 3246086596 VIA LICONI 15 - AOSTA", "feedback": ""},
+  {"id": "10", "chiamata": "2026-07-14", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CONTOZ LUCIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel. 3334504310  Rue de Seigneur 4 Nus", "feedback": ""},
+  {"id": "11", "chiamata": "2026-07-13", "stato": "SOPRALLUOGO NON FATTO", "cliente": "PENNUCCI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via Monte Zerbion, 5 Aosta 3287862173", "feedback": ""},
+  {"id": "12", "chiamata": "2026-07-13", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CCS AOSTA SRL", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "QUART", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Claude 0165765146 fraz. Olleyes, 9 - Quart", "feedback": ""},
+  {"id": "13", "chiamata": "2026-07-13", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BASTER MARISA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "altro sopralluogo per altro alloggio di proprietà Via Parigi 149 3283269167", "feedback": ""},
+  {"id": "14", "chiamata": "2026-07-13", "stato": "SOPRALLUOGO NON FATTO", "cliente": "LUIGI ZOPPO ZONZERO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel. 3281217855 luigi59lzr@gmail.com", "feedback": "Contatto dal sito"},
+  {"id": "15", "chiamata": "2026-07-13", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TEDESCO SANDRO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "GRESSAN", "appChi": "Floran 20/07/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Fraz. Hopital 5 Gressan 3405603610", "feedback": ""},
+  {"id": "16", "chiamata": "2026-07-10", "stato": "SOPRALLUOGO NON FATTO", "cliente": "D'ANELLO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via Torino  - 3356533904 ha degli appartamenti ad uso vacanza da condizionare", "feedback": ""},
+  {"id": "17", "chiamata": "2026-07-10", "stato": "SOPRALLUOGO NON FATTO", "cliente": "FLORIO DARIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 20/07/26 h. 10,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Reg. Pallin, 20 Aosta dario.florio.aosta@gmail.com 339-1055982", "feedback": "Contatto dal sito"},
+  {"id": "18", "chiamata": "2026-07-10", "stato": "SOPRALLUOGO NON FATTO", "cliente": "SABATINO FILIPPO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 21/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "E' arrivata mail con richiesta è il proprietario della farmacia di Gressan 0165251092", "feedback": ""},
+  {"id": "19", "chiamata": "2026-07-10", "stato": "PREVENTIVO INVIATO", "cliente": "ROSSOCHIOSO MASSIMO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "462", "gestoprevOk": true, "gestoprevNum": "1603", "note": "Via Torino  (CONTATTO DI CORRADO)", "feedback": ""},
+  {"id": "20", "chiamata": "2026-07-09", "stato": "SOPRALLUOGO NON FATTO", "cliente": "DUHANIMC LUDMILLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel. 3280238090 non abbiamo capito l'indirizzo", "feedback": ""},
+  {"id": "21", "chiamata": "2026-07-09", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TRENTO CHRISTIAN", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AYMAVILLES", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel.3923375943 FRAZ. CRETAZ ST MARTIN, 19 2° PIANO SE POSSIBILE APP.TO 17,30-18,00", "feedback": ""},
+  {"id": "22", "chiamata": "2026-07-09", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CENTRO VALD. REVISIONI", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/07/26  h. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "460", "gestoprevOk": true, "gestoprevNum": "1600", "note": "Tel.  PAOLO 3478939957 o questa settimana o dopo il 20/07", "feedback": ""},
+  {"id": "23", "chiamata": "2026-07-08", "stato": "PREVENTIVO INVIATO", "cliente": "ENCANTO", "tipo": "SOCIETA", "richiesta": "VENTILCONVETTORE", "localita": "QUART", "appChi": "FLORAN 08/07/26 H 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "443", "gestoprevOk": true, "gestoprevNum": "1537", "note": "", "feedback": ""},
+  {"id": "24", "chiamata": "2026-07-08", "stato": "PREVENTIVO INVIATO", "cliente": "FIOU MARCO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "QUART", "appChi": "Floran 10/07/26 h. 9,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "461", "gestoprevOk": false, "gestoprevNum": "", "note": "Ex capannone Ecoval di fronte a Mondo Bimbo 3467874704", "feedback": ""},
+  {"id": "25", "chiamata": "2026-07-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CESTARO CRISTINA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "Floran 20/07/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel 3474344260 (Contatto da Floran) Fraz Ecleroz - Quart (sopra casa di Corrado)", "feedback": ""},
+  {"id": "26", "chiamata": "2026-07-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "A.N.A.S.", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo comunicato da Desandre per impianto deposito mezzi", "feedback": ""},
+  {"id": "27", "chiamata": "2026-07-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "LUCIANI MATTEO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "E' il figlio di Torelli fare sopralluoghi congiunti Fraz. Fachet 3 Sarre tel. 392509375 tardo pom", "feedback": ""},
+  {"id": "28", "chiamata": "2026-07-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TORELLI SIMONA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Hanno un impianto Mitsu di 22 anni vogliono metterne un altro Fraz. Tissoret, 23 Sarre 3927509376  tardo pom", "feedback": ""},
+  {"id": "29", "chiamata": "2026-07-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "VIVONA MATTEO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "Floran 16/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel. 3342946767 Loc. Condemine, 57 - Sarre", "feedback": ""},
+  {"id": "31", "chiamata": "2026-07-06", "stato": "SOPRALLUOGO NON FATTO", "cliente": "VICQUERY CRISTINA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "VERRES", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel.  3470417740 - anvik@libero.it  (CONTATTO DAL SITO)", "feedback": ""},
+  {"id": "32", "chiamata": "2026-07-06", "stato": "NON PIU INTERESSATO", "cliente": "GASPARE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "", "appChi": "09/07/26 Ha già provveduto", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "3881640944 (CONTATTO DI CORRADO)", "feedback": "09/07/26 dice che ringrazia ma ha già provveduto"},
+  {"id": "33", "chiamata": "2026-07-06", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BARAILLER LUIGI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VILLAIR  TEL 3398098087,  (CONTATTO DI CORRADO) organizzare per il 20 o il 21/07/2026", "feedback": ""},
+  {"id": "34", "chiamata": "2026-07-06", "stato": "NON PIU INTERESSATO", "cliente": "NICOLA PRETTICO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "09/07 -Ha già provveduto", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA VALLI VALDOSTANE 9/C  - AOSTA 351/58784705 (CONTATTO DI CORRADO)", "feedback": "09/07/26 ha già fatto con altri"},
+  {"id": "35", "chiamata": "2026-07-06", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GERARDO ANTONACCI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 14/07/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA PASQUETTAZ 3489169358  (CONTATTO DI CORRADO)", "feedback": ""},
+  {"id": "36", "chiamata": "2026-07-03", "stato": "NON PIU INTERESSATO", "cliente": "CORNIER ANGELA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "09/07 - Ha già provveduto", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Richiesta per impianto Via Carrel, 29 - Aosta tel 3471556329", "feedback": "09/07/26 non ci ha sentiti allora ha già provveduto altrove"},
+  {"id": "37", "chiamata": "2026-07-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BEI - CARREFOUR EXPRESS", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "Floran - Magri 07/07/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Richiesta sostituzione impianto di condizionamento richiesto via mail dalla BEI Marco Di Ceglie", "feedback": ""},
+  {"id": "38", "chiamata": "2026-07-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "NEAGO ALIN", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via Chambery, 115 - 11100 Aosta 3332565743 (da fare dopo le 17,00)", "feedback": ""},
+  {"id": "39", "chiamata": "2026-07-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GYPPAZ DENIS", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "Floran 14/07/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Fraz. Poinsod 130 - Sarre - Contattato direttamente Floran", "feedback": ""},
+  {"id": "40", "chiamata": "2026-07-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "PARUSSINI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 06/07/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "447", "gestoprevOk": true, "gestoprevNum": "1541-1542", "note": "Contattato direttamente Floran", "feedback": ""},
+  {"id": "41", "chiamata": "2026-07-03", "stato": "PREVENTIVO INVIATO", "cliente": "BUSCHINO RACHELE - EMPORIO DELL'AUTO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 03/07/26 h. 16,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "438", "gestoprevOk": true, "gestoprevNum": "1501", "note": "Sopralluogo su predisposizione gia' fatta", "feedback": ""},
+  {"id": "42", "chiamata": "2026-07-02", "stato": "PREVENTIVO INVIATO", "cliente": "ALESSI ANTONIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "Floran 14/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "467", "gestoprevOk": false, "gestoprevNum": "", "note": "Via C. Gex, 38 Nus villetta a schiera 3384760856 - moglie 3464154586 (da fare entro le h. 16,00)", "feedback": ""},
+  {"id": "43", "chiamata": "2026-07-02", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BASTER MARISA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 16/07/26 H. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "C.so Ivrea, 70 - Aosta - 3283269167-chiamare il 13 per organizzare che questa settimana non è ad Aosta", "feedback": ""},
+  {"id": "44", "chiamata": "2026-07-01", "stato": "PREVENTIVO INVIATO", "cliente": "PEREGO IVANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "Floran 08/07/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "452-454-455", "gestoprevOk": true, "gestoprevNum": "1569", "note": "Tel.  3356262287 FRAZ. SAINT BENIN, 2 - POLLEIN compagna: GAIONI SILVIA 328/1843331", "feedback": ""},
+  {"id": "45", "chiamata": "2026-07-01", "stato": "PREVENTIVO ACCETTATO", "cliente": "GILLIAVOD SERGIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 08/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "449", "gestoprevOk": true, "gestoprevNum": "1543", "note": "", "feedback": ""},
+  {"id": "46", "chiamata": "2026-07-01", "stato": "PREVENTIVO INVIATO", "cliente": "OSTINELLI ANDREA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 01/07/26 h. 16,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "422", "gestoprevOk": true, "gestoprevNum": "1473", "note": "Via Festaz, 52 - Aosta contattato direttamente Floran", "feedback": ""},
+  {"id": "47", "chiamata": "2026-07-01", "stato": "PREVENTIVO INVIATO", "cliente": "MDM", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "Ponessa-Magri  01/07/26 pomeriggio", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "416", "gestoprevOk": true, "gestoprevNum": "1464", "note": "Hanno bisogno urgente di un sopralluogo per cdz in cabina elettrica chiamare Natalino 016661476", "feedback": ""},
+  {"id": "48", "chiamata": "2026-06-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "EUROSERVICE", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "QUART", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "LOC AMERIQUE, 25 QUART STELLA 3389414798 PER SPOSTAMENTO CDZ", "feedback": "06/07/26 Dice che siamo troppo cari"},
+  {"id": "49", "chiamata": "2026-06-30", "stato": "PREVENTIVO INVIATO", "cliente": "FANIZZI STEFANIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/07/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "459", "gestoprevOk": true, "gestoprevNum": "1599", "note": "VIA MALHERBES 20 AOSTA  tel 3284510919 condizionare camera da letto e soggiorno", "feedback": ""},
+  {"id": "50", "chiamata": "2026-06-29", "stato": "SOPRALLUOGO NON FATTO", "cliente": "FOURNIER FABRIZIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT VINCENT", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA IV NOVEMBRE 46 SAINT VINCENT 3332368720 E' AL 4° PIANO UE DA METTERE SUL TETTO", "feedback": ""},
+  {"id": "51", "chiamata": "2026-06-29", "stato": "PREVENTIVO INVIATO", "cliente": "EDISON C/O OSPEDALE", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 02/07/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "419", "gestoprevOk": true, "gestoprevNum": "1470", "note": "camera 11 Ortopedia da sostituire condizionatore mail da Glarey dell'Edison", "feedback": ""},
+  {"id": "52", "chiamata": "2026-06-29", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BONDET GIADA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "HONE", "appChi": "Floran 16/07/26 h. 10,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo 3474357346 fraz. Charvaz  6 Hone", "feedback": ""},
+  {"id": "53", "chiamata": "2026-06-29", "stato": "PREVENTIVO INVIATO", "cliente": "GRANGE CHRISTINE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "Floran 08/07/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "450-451", "gestoprevOk": true, "gestoprevNum": "1544", "note": "Tel 3492990118  preventivo per sistema di condizionamento per casa 3 livelli da fare o di merc o giov o ven", "feedback": ""},
+  {"id": "54", "chiamata": "2026-06-26", "stato": "SOPRALLUOGO NON FATTO", "cliente": "DI FRANCESCO ANTONIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Ponessa-Floran 06/07 aspettare per soprallugo e' mancata la moglie", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel 3475233026 Reg. Bioula, 19/a - Aosta pdc+fotovoltaico", "feedback": ""},
+  {"id": "55", "chiamata": "2026-06-26", "stato": "NON PIU INTERESSATO", "cliente": "CAMBI GIUSEPPE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT MARCEL", "appChi": "HA GIA' PROVVEDUTO", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "TEL 3927050339 LOC. FAVERGE, 27 ST MARCEL", "feedback": "07/07/26 L'HO CONTATTATO PER IL SOPRALLUOGO ED HA GIA' PROVVEDUTO VISTO CHE SIAMO STATI LENTI"},
+  {"id": "56", "chiamata": "2026-06-26", "stato": "SOPRALLUOGO NON FATTO", "cliente": "DUFOUR DANIELA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT VINCENT", "appChi": "DA CONTATTARE A SETTEMBRE", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "TEL 3478219321 FRAZ. RONC SUPERIORE", "feedback": "07/07 E' UNA CASA VACANZA ED ORA FINO A SETTEMBRE E' PIENA CI CONTATTERA' LEI A FINE STAGIONE"},
+  {"id": "57", "chiamata": "2026-06-25", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CHICCI DI GRANO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 14/07/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via croce di Citta, 83 - Aosta tel. 3273590520 chiamare al mattino", "feedback": ""},
+  {"id": "58", "chiamata": "2026-06-25", "stato": "PREVENTIVO ACCETTATO", "cliente": "CARFONA GIUSEPPE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "Ponessa-Magri 02/07/26 h. 17,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "429-430", "gestoprevOk": true, "gestoprevNum": "1512", "note": "", "feedback": ""},
+  {"id": "59", "chiamata": "2026-06-25", "stato": "SOPRALLUOGO NON FATTO", "cliente": "JOLY NADIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ARNAD", "appChi": "Floran 16/07/26 h. 09,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "3282248482 ARNAD VICINO AL GIORNALAIO", "feedback": ""},
+  {"id": "60", "chiamata": "2026-06-25", "stato": "", "cliente": "CENTRO ESTETICO BEUTY", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 30/06/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "3472146614 ALEXANDRA CORSO LANCIERI 4 AOSTA", "feedback": ""},
+  {"id": "61", "chiamata": "2026-06-25", "stato": "", "cliente": "PIVOT MARIA ENRICA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 02/07/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "437", "gestoprevOk": true, "gestoprevNum": "1497", "note": "", "feedback": ""},
+  {"id": "62", "chiamata": "2026-06-24", "stato": "PREVENTIVO INVIATO", "cliente": "GRIZZO-GRIGGIO MARIA CRISTINA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/07/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "464", "gestoprevOk": true, "gestoprevNum": "1609", "note": "VIA ADAMELLO 18 AOSTA 3398292338", "feedback": ""},
+  {"id": "63", "chiamata": "2026-06-24", "stato": "PREVENTIVO INVIATO", "cliente": "DALLA LIBERA DIEGO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "Ponessa - Magri 03/07/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "434", "gestoprevOk": true, "gestoprevNum": "1524", "note": "LOC CHENIERE 14/A POLLEIN 2474832456 IVA4%?", "feedback": ""},
+  {"id": "64", "chiamata": "2026-06-24", "stato": "PREVENTIVO ACCETTATO", "cliente": "GRAIANI LUCIANA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/07/26 h. 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "458", "gestoprevOk": true, "gestoprevNum": "1598", "note": "", "feedback": "30/06 FLO MI HA FATTO CHIAMARE PER ANNULLARE L'APP.TO, NON MI HA DATO DATE PER SPOSTARLO"},
+  {"id": "65", "chiamata": "2026-06-24", "stato": "NON PIU INTERESSATO", "cliente": "D'ARRRIGO GEMMA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "07/07 Ha già fatto", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo per impianto su pred gia' fatta Rue de Fermes 4 Aosta 329-0129816 alle 14,00", "feedback": "07/07/26 ho chiamato per fissare sopralluogo mi ha risposto che ringrazia ma ha già fatto"},
+  {"id": "66", "chiamata": "2026-06-24", "stato": "NON PIU INTERESSATO", "cliente": "TORRESIN MARINELLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "PONT ST MARTIN", "appChi": "Floran 29/06/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo 1° piano Via Resistenza 88 - Pont St Martin Tel 3358294247", "feedback": "29/06/26 La Sig.ra dice di aver avvertito che non voleva il cdz, nessuno ha ricevuto questa comunicazione"},
+  {"id": "67", "chiamata": "2026-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "CONFIDI CENTRO NORD", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 30/06/26 h. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "412", "gestoprevOk": true, "gestoprevNum": "1459", "note": "Sopralluogo per impianto nuovo Via Festaz, 79  0165548588", "feedback": ""},
+  {"id": "68", "chiamata": "2026-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "CARPENTERIA GUOLO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "SAINT MARCEL", "appChi": "Floran 01/07/26 h. 09,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "418", "gestoprevOk": true, "gestoprevNum": "1472", "note": "Sopralluogo per impianto  Zona Industriale Saint Marcel cdz 0165764085", "feedback": ""},
+  {"id": "69", "chiamata": "2026-06-19", "stato": "", "cliente": "LAURENT CAVERI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "Ponessa- Magri 02/07/26 H. 10,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "E' ARRIVATA MAIL CON RICHIESTA PREVENTIVO ING. OGGIANI 3494108048 CHIAMARE LUI PER SOPRALLUOGO", "feedback": ""},
+  {"id": "70", "chiamata": "2026-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "BONEL GIANNI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ARNAD", "appChi": "Floran 29/06/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "426", "gestoprevOk": true, "gestoprevNum": "1481", "note": "FRAZ. CLOS 17 ARNAD 3662884765 bonelandrea@gmail.com", "feedback": ""},
+  {"id": "71", "chiamata": "2026-06-23", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BRUNO GIORGI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "FRAZ. FAREUR, 17 SARRE HANNO GIA UN PREV PER UN DUAL DELLA RIELLO TEL IL FIGLIO 3475150275 ANDREA", "feedback": ""},
+  {"id": "72", "chiamata": "2026-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "PAGANIN ALBERTO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT CHRISTOPHE", "appChi": "Floran 25/06/26 h. 08,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "404", "gestoprevOk": true, "gestoprevNum": "1435", "note": "3403972368 Loc. Sorreley, 12 Saint Christophe", "feedback": ""},
+  {"id": "73", "chiamata": "2026-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "UFFICIO DEL TURISMO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 23/06/26 h. 09,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "384", "gestoprevOk": false, "gestoprevNum": "", "note": "PIAZZALE DELLA CONSOLATA CON FRISON 0165300522", "feedback": ""},
+  {"id": "74", "chiamata": "2026-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "QUARANTA MASSIMO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 24/06/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "401", "gestoprevOk": true, "gestoprevNum": "1429", "note": "Via St Martin de corleans, 261  - Aosta 3409756768 vuole condizionare  salotto e cucina", "feedback": ""},
+  {"id": "75", "chiamata": "2026-06-22", "stato": "PREVENTIVO ACCETTATO", "cliente": "CASINO DE LA VALLEE", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "Floran 23/06/26 h. 06,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "409", "gestoprevOk": true, "gestoprevNum": "1457", "note": "", "feedback": ""},
+  {"id": "76", "chiamata": "2026-06-22", "stato": "", "cliente": "ZANCHETTA SOFIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "Floran 01/07/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "tel 3487043132 loc grand pollein, 1 Pollei  raffrescare 50 mq a piano terra ma ha problemi su dove mettere unita", "feedback": ""},
+  {"id": "77", "chiamata": "2026-06-22", "stato": "SOPRALLUOGO NON FATTO", "cliente": "ZANCHETTA OTTAVIANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "TENERE IN SOSPESO PER IL MOMENTO", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel 3487043132 figlia -  via del collegio 2 Aosta cdz per ambiente da 25MQ", "feedback": ""},
+  {"id": "78", "chiamata": "2026-06-22", "stato": "PREVENTIVO ACCETTATO", "cliente": "DE LUCA CLAUDIA", "tipo": "PRIVATA", "richiesta": "CDZ", "localita": "GIGNOD", "appChi": "Floran 25/06/26 h. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "405", "gestoprevOk": true, "gestoprevNum": "1434", "note": "", "feedback": ""},
+  {"id": "79", "chiamata": "2026-06-19", "stato": "", "cliente": "USL ECONOMATO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "SAINT CHRISTOPHE", "appChi": "Effettuato Magri il sopralluogo", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Chiamare Peloso 3334899179 per cdz uffici economato Saint Christophe", "feedback": ""},
+  {"id": "80", "chiamata": "2026-06-18", "stato": "PREVENTIVO INVIATO", "cliente": "BALDON MICHEL", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "Floran 25/06/26 h. 16,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "415-417", "gestoprevOk": true, "gestoprevNum": "1466-1467", "note": "TEL 3336801977 - LOC. BAS VILLAIR, 33 - QUART", "feedback": ""},
+  {"id": "81", "chiamata": "2026-06-18", "stato": "PREVENTIVO INVIATO", "cliente": "GJINI AVJONELA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 18/06/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "364", "gestoprevOk": true, "gestoprevNum": "1348", "note": "Sopralluogo eseguito viale f. chabod ad Aosta 3488240546", "feedback": ""},
+  {"id": "82", "chiamata": "2026-06-17", "stato": "PREVENTIVO ACCETTATO", "cliente": "PIETRO GIORGIO/BOSI GABRIELLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 24/06/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "398", "gestoprevOk": true, "gestoprevNum": "1415", "note": "", "feedback": ""},
+  {"id": "83", "chiamata": "2026-06-15", "stato": "PREVENTIVO ACCETTATO", "cliente": "GYPPAZ ISABELLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "356", "gestoprevOk": true, "gestoprevNum": "1295", "note": "", "feedback": ""},
+  {"id": "84", "chiamata": "2026-06-15", "stato": "PREVENTIVO INVIATO", "cliente": "ROSSAN PAOLO", "tipo": "AMBULATORIO", "richiesta": "CDZ", "localita": "SAINT PIERRE", "appChi": "Floran 24/06/26 h. 08,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "402-403", "gestoprevOk": true, "gestoprevNum": "1429", "note": "Sopralluogo per cdz in studio dalla Sua inquilina pediatra Dotto Sanbarino  3356668138 (Rossan 3495840069)", "feedback": ""},
+  {"id": "85", "chiamata": "2026-06-15", "stato": "", "cliente": "CHENAL MANUEL", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "GRESSAN", "appChi": "Floran 24/06/26 h. 16,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "FRAZ. LA COMBA GRESSAN 3483883341", "feedback": ""},
+  {"id": "86", "chiamata": "2026-06-15", "stato": "SOPRALLUOGO NON FATTO", "cliente": "LUISI GRAZIANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "VERRES", "appChi": "Ruben prende misure 19/06/26", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA DEI GIARDINI 39 VERRES 3471703036 - VUOLE SPOSTARE UN CDZ", "feedback": ""},
+  {"id": "87", "chiamata": "2026-06-15", "stato": "PREVENTIVO INVIATO", "cliente": "GRECO DARIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "MORGEX", "appChi": "Floran 18/06/26", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "1900-12-28 00:00:00", "gestoprevOk": true, "gestoprevNum": "1339", "note": "", "feedback": ""},
+  {"id": "88", "chiamata": "2026-06-12", "stato": "PREVENTIVO INVIATO", "cliente": "FRANCESCONO PAOLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 19/06/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "373", "gestoprevOk": true, "gestoprevNum": "1373", "note": "Via Marmore, 2 Aosta 3389158392", "feedback": ""},
+  {"id": "89", "chiamata": "2026-06-11", "stato": "PREVENTIVO INVIATO", "cliente": "PARMA ANDREA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 18/06/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "372", "gestoprevOk": true, "gestoprevNum": "1375", "note": "Via Liconi, 6/5 Aosta 3478511557", "feedback": ""},
+  {"id": "90", "chiamata": "2026-06-11", "stato": "PREVENTIVO INVIATO", "cliente": "COLOMBO EDOARDO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 18/06/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "368-367", "gestoprevOk": true, "gestoprevNum": "1356", "note": "Via Monte Pasubio, 12 Aosta 3899990329", "feedback": ""},
+  {"id": "91", "chiamata": "2026-06-09", "stato": "", "cliente": "FUSARIO ANTONIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 18/06/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via de Tillier, 35 Aosta Negozio Andrea 3881141938", "feedback": ""},
+  {"id": "92", "chiamata": "2026-06-05", "stato": "SOPRALLUOGO NON FATTO", "cliente": "PATRIZI DANIELE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Via Duca degli Abruzi, 4 Aosta 3518279383", "feedback": "19/06 non mi risponde al telefono gli ho mandato un wa 30/06 non mi ha mai risposto"},
+  {"id": "93", "chiamata": "2026-06-05", "stato": "PREVENTIVO ACCETTATO", "cliente": "MDM", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/06/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "347", "gestoprevOk": true, "gestoprevNum": "1296", "note": "", "feedback": ""},
+  {"id": "94", "chiamata": "2026-06-05", "stato": "PREVENTIVO INVIATO", "cliente": "VENCATO ROBERTO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 10/06/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "352", "gestoprevOk": true, "gestoprevNum": "1312", "note": "Via Monte Vodice, 47 Aosta 3393646429", "feedback": ""},
+  {"id": "95", "chiamata": "2026-06-04", "stato": "PREVENTIVO ACCETTATO", "cliente": "SPINELLA EMANUELA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT CHRISTOPHE", "appChi": "Floran 08/06/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "340", "gestoprevOk": true, "gestoprevNum": "1273", "note": "", "feedback": "22/06 ci manda l'ok a brev"},
+  {"id": "96", "chiamata": "2026-06-03", "stato": "PREVENTIVO INVIATO", "cliente": "TUNNEL MONTE BIANCO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "COURMAYEUR", "appChi": "Floran 04/06/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "336", "gestoprevOk": true, "gestoprevNum": "128", "note": "", "feedback": ""},
+  {"id": "97", "chiamata": "2026-06-03", "stato": "NON PIU INTERESSATO", "cliente": "TREVES DANIEL", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT VINCENT", "appChi": "04/06/26 contattato ma non piu", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA FERRET, 2 SAINT VINCENT 3393574658 CONDIZIONARE 2 STANZE+VERANDA", "feedback": "04/06 Non è piu' intenzionato"},
+  {"id": "98", "chiamata": "2026-05-29", "stato": "", "cliente": "FABIANO STEFANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ROISAN", "appChi": "Floran 11/06/26 h. 15,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "FRAZ. RHINS 44 ROISAN CASA IN COSTRUZIONE 3487439782", "feedback": ""},
+  {"id": "99", "chiamata": "2026-05-29", "stato": "PREVENTIVO INVIATO", "cliente": "GROSJEAN SIMON", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "Floran 08/06/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "374", "gestoprevOk": true, "gestoprevNum": "1448", "note": "Ha comprato casa a Nus- Fraz. La Plaine28 tel  3202139964", "feedback": ""},
+  {"id": "100", "chiamata": "2026-05-26", "stato": "PREVENTIVO INVIATO", "cliente": "CAFFE DELLA POSTA CARTER&CARTER SRL", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "COURMAYEUR", "appChi": "Floran 04/05/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "345", "gestoprevOk": false, "gestoprevNum": "", "note": "VIA ROMA 51 COURMAYEUR 3335229606 ENRICO 3923022002 ANGELICA + CONTARE I FRIGHI PER CONTRATTO MAN", "feedback": ""},
+  {"id": "101", "chiamata": "2026-05-26", "stato": "PREVENTIVO ACCETTATO", "cliente": "BORDINO CLAUDIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 29/05/26 h. 13,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "313-315", "gestoprevOk": true, "gestoprevNum": "1199", "note": "", "feedback": ""},
+  {"id": "102", "chiamata": "2026-05-26", "stato": "PREVENTIVO INVIATO", "cliente": "STUDIO DENTISTICO DOTT.SSA GNED", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "Floran 04/05/26 h. 13,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "320-436", "gestoprevOk": true, "gestoprevNum": "1203", "note": "TEL 3391690460-3394950362 VIA CORRADO GEX, 7 SAINT PIERRE", "feedback": ""},
+  {"id": "103", "chiamata": "2026-05-25", "stato": "PREVENTIVO ACCETTATO", "cliente": "FARACI VINCENZO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 28/05/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "323", "gestoprevOk": true, "gestoprevNum": "1205", "note": "", "feedback": ""},
+  {"id": "104", "chiamata": "2026-05-25", "stato": "", "cliente": "FUNCTIONAL SERVICE", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "ST CHRISTOPHE", "appChi": "Floran 28/05/26 h. 15,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo urgente per sostituzione pdc 0165230506", "feedback": ""},
+  {"id": "105", "chiamata": "2026-05-21", "stato": "PREVENTIVO INVIATO", "cliente": "MOSCA ALESSANDRO STUDIO VETERINARIO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 25/05/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "318-319", "gestoprevOk": true, "gestoprevNum": "1202", "note": "C.SO LANCIERI 08,30-12/16-19 Aggiungere dei cdz all'impianto che hanno 3408578322", "feedback": "22/06/26 Ci farà sapere nei prox gg"},
+  {"id": "106", "chiamata": "2026-05-20", "stato": "PREVENTIVO ACCETTATO", "cliente": "MDM", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "CHATILON", "appChi": "Floran 26/05/26 h. 13,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "312", "gestoprevOk": true, "gestoprevNum": "1196", "note": "", "feedback": ""},
+  {"id": "107", "chiamata": "2026-05-18", "stato": "PREVENTIVO INVIATO", "cliente": "BERSANI FRANCESCO", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "BRUSSON", "appChi": "Floran 20/05/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "298", "gestoprevOk": true, "gestoprevNum": "1146", "note": "Locale commerciale 2 stanze 6/9 kw aria acqua tel 3494062925 sia cdz che acqua calda", "feedback": ""},
+  {"id": "108", "chiamata": "2026-05-15", "stato": "PREVENTIVO INVIATO", "cliente": "CENTRO ADDESTRAMENTO ALPINI", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 19/05/26 h. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "314", "gestoprevOk": true, "gestoprevNum": "1200", "note": "Castello cantore c/o Scuola Militare Alpina 17 Aosta Magg. Caruso 3283399282 richiesta cdz", "feedback": ""},
+  {"id": "109", "chiamata": "2026-05-14", "stato": "PREVENTIVO INVIATO", "cliente": "SACCANI GIANLUCA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "Floran 20/05/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "295", "gestoprevOk": true, "gestoprevNum": "1128", "note": "Vorrebbe un Dual 3356998471 Loc. Bussan Dessous, 93 - St Pierre", "feedback": "22/06/26 per ora devono soprassedere"},
+  {"id": "110", "chiamata": "2026-05-13", "stato": "", "cliente": "MARTUCCI MATTEO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "Floran 13/05/26 h. 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "a consuntivo", "gestoprevOk": false, "gestoprevNum": "", "note": "Devono smontare ue dal balcone  3450200872 - avevamo installato a Grobbiero Franca", "feedback": ""},
+  {"id": "111", "chiamata": "2026-05-12", "stato": "PREVENTIVO INVIATO", "cliente": "BERLIER LARA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "GRESSAN", "appChi": "Floran 14/05/26 h. 09,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "280-287", "gestoprevOk": true, "gestoprevNum": "1050-1051", "note": "Fraz. La Combaz, 9/a - Gressan 3938439286", "feedback": "26/05 Dobbiamo vedere se riusciamo a riparare il suo impianto e comunque gli serve per l'inverno"},
+  {"id": "112", "chiamata": "2026-05-08", "stato": "PREVENTIVO ACCETTATO", "cliente": "MACULAN NICOLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 14/05/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "270-291-292", "gestoprevOk": true, "gestoprevNum": "1019", "note": "", "feedback": "15/05 Il cliente sta guardando perché ha altri prev."},
+  {"id": "113", "chiamata": "2026-05-05", "stato": "PREVENTIVO INVIATO", "cliente": "BAR GOU", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "COURMAYEUR", "appChi": "Floran 19/05/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "292", "gestoprevOk": true, "gestoprevNum": "1124", "note": "", "feedback": ""},
+  {"id": "114", "chiamata": "2026-05-05", "stato": "PREVENTIVO ACCETTATO", "cliente": "SBLENDORIO GRANGE LUCIANA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "Floran 14/05/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "269", "gestoprevOk": true, "gestoprevNum": "1021", "note": "", "feedback": ""},
+  {"id": "115", "chiamata": "2026-04-30", "stato": "PREVENTIVO ACCETTATO", "cliente": "MAUTINO MARA BARBARA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 30/04/26 h. 18,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "249", "gestoprevOk": true, "gestoprevNum": "942", "note": "", "feedback": ""},
+  {"id": "116", "chiamata": "2026-04-29", "stato": "PREVENTIVO INVIATO", "cliente": "ALBANI STEFANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 20/05/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "305-306", "gestoprevOk": true, "gestoprevNum": "1197", "note": "3285999910 VIA ROMA 1/A AOSTA", "feedback": "22/06/26 sta aspettando altri prev. prima di decidere"},
+  {"id": "117", "chiamata": "2026-04-29", "stato": "PREVENTIVO INVIATO", "cliente": "CARIA LINDA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 04/05/26 h. 08,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "254-303", "gestoprevOk": true, "gestoprevNum": "964", "note": "", "feedback": "26/05 vuole una revisione perché così e troppo caro"},
+  {"id": "118", "chiamata": "2026-04-28", "stato": "", "cliente": "MAB MAISON DES ARTISTES", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "BARD", "appChi": "Floran 13/05/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "119", "chiamata": "2026-04-27", "stato": "PREVENTIVO INVIATO", "cliente": "BELLETTA ELISA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT VINCENT", "appChi": "12/05 ci manderanno piantina", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "275", "gestoprevOk": true, "gestoprevNum": "1140", "note": "392/8017028 VIA 4 NOVEMBRE SAINT VINCENT 2 CASE SUA E DI SUO FRATELLO (SONO DI MILANO) MONOLOCALE", "feedback": ""},
+  {"id": "120", "chiamata": "2026-04-27", "stato": "NON PIU INTERESSATO", "cliente": "BALLIANA MARCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT VINCENT", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "3473802262 VIA GUILLET, 23 SAINT VINCENT- 12/05 SIAMO ARRIVATI TROPPO TARDI", "feedback": ""},
+  {"id": "121", "chiamata": "2026-04-23", "stato": "", "cliente": "Bertuletti Luca/MANTOVA MARCELLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 23/04/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "231", "gestoprevOk": true, "gestoprevNum": "901", "note": "", "feedback": ""},
+  {"id": "122", "chiamata": "2026-04-22", "stato": "PREVENTIVO ACCETTATO", "cliente": "MOLINELLI RITA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 30/04/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "354", "gestoprevOk": true, "gestoprevNum": "1453", "note": "", "feedback": ""},
+  {"id": "123", "chiamata": "2026-04-21", "stato": "PREVENTIVO ACCETTATO", "cliente": "BARATHIER SERGIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 30/04/26 h. 09,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "124", "chiamata": "2026-04-21", "stato": "PREVENTIVO ACCETTATO", "cliente": "FRAZZETTA SIMONE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "Floran 06/05/26 h. 11,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "256", "gestoprevOk": true, "gestoprevNum": "969", "note": "", "feedback": ""},
+  {"id": "125", "chiamata": "2026-04-20", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CAIRO GABRIELE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "LA SALLE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "18/05 ci richiama - Fraz. La Clusaz, 60 La Salle 3483544373", "feedback": ""},
+  {"id": "126", "chiamata": "2026-04-20", "stato": "PREVENTIVO INVIATO", "cliente": "RIVARIBO' MANUELA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 30/04/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "255", "gestoprevOk": true, "gestoprevNum": "999", "note": "Via Festaz 66- Aosta tel 3200227445 PRENDERE APP.TO DOPO LE 16,00", "feedback": "20/05 non rispondono"},
+  {"id": "127", "chiamata": "2026-04-17", "stato": "PREVENTIVO INVIATO", "cliente": "BERTARINI PAOLO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "Floran 24/04/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "248", "gestoprevOk": true, "gestoprevNum": "944", "note": "3475449149 Paolo loc. St Benin 11020 Pollein spostare e sostituire cdz", "feedback": "20/05 non rispondono"},
+  {"id": "128", "chiamata": "2026-04-17", "stato": "", "cliente": "ECOEDIL", "tipo": "SOCIETA", "richiesta": "PDC", "localita": "LA SALLE", "appChi": "Floran 18/04/26 h. 07,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo La Salle 0382999557 contabile.ecoedil@libero.it", "feedback": ""},
+  {"id": "129", "chiamata": "2026-04-17", "stato": "PREVENTIVO INVIATO", "cliente": "VELIA MALERBA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 22/04/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "232", "gestoprevOk": true, "gestoprevNum": "917", "note": "", "feedback": ""},
+  {"id": "130", "chiamata": "2026-04-15", "stato": "", "cliente": "SERGI FRANCESCO", "tipo": "PRIVATO", "richiesta": "CDZ +FV", "localita": "POLLEIN", "appChi": "FLORAN-PONESSA 21/04/26 H. 11,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Sopralluogo per Fotovoltaico e pdc a Pollein 3758053468 una trifamigliare ma probabilmente 2 alloggi loc. st Benin, 50", "feedback": ""},
+  {"id": "131", "chiamata": "2026-04-14", "stato": "PREVENTIVO ACCETTATO", "cliente": "BAR MOCHETTAZ & CHAMPION SNC", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "FLORAN 20/04/26 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "278-290", "gestoprevOk": true, "gestoprevNum": "1079", "note": "", "feedback": ""},
+  {"id": "132", "chiamata": "2026-04-14", "stato": "PREVENTIVO INVIATO", "cliente": "ZAFRA MONICA", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "FLORAN 20/04/26 H. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "238", "gestoprevOk": true, "gestoprevNum": "918", "note": "Laboratorio di 30mq vuole togliere la caldaia e mettere una pdc 3425341407 via st martin de corleans 304", "feedback": "20/05 non rispondono"},
+  {"id": "133", "chiamata": "2026-04-14", "stato": "PREVENTIVO ACCETTATO", "cliente": "MARTA SERGIO", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "QUART", "appChi": "FLORAN-MAGRI 23/04/26 H. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "257-258", "gestoprevOk": true, "gestoprevNum": "991", "note": "", "feedback": "26/05 prox settimana decide vuole GSE"},
+  {"id": "134", "chiamata": "2026-04-08", "stato": "NON PIU INTERESSATO", "cliente": "ADDARIO VINCENZO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Reg. Brenlo 8 cdz per camera da letto e sala 3337233301- Voleva un sopralluogo urgente perché aveva un altro preventivo e doveva decidere . Gli ho proposto il 16/04 ed era tra troppo tempo. Quindi niente", "feedback": ""},
+  {"id": "135", "chiamata": "2026-04-02", "stato": "PREVENTIVO INVIATO", "cliente": "PERRI FRANCO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "FENIS", "appChi": "FLORAN 14/04/26 H. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "223-226-265", "gestoprevOk": true, "gestoprevNum": "847-848-1034", "note": "3498302124 FRAZ, CHEZ CROISET, 47 FENIS Sopralluogo per installazione pdc in ristrutturazione", "feedback": ""},
+  {"id": "136", "chiamata": "2026-04-01", "stato": "", "cliente": "MANUMBO", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "FLORAN", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "A C", "gestoprevOk": true, "gestoprevNum": "707", "note": "LAVORO DA FARE A CONSUNTIVO", "feedback": ""},
+  {"id": "137", "chiamata": "2026-03-30", "stato": "", "cliente": "BARRA LUCA  NEGOZIO GIOELLI", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 13/05/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "277/26", "gestoprevOk": false, "gestoprevNum": "", "note": "Negozio Via De Tillier - AostaORIZZONTE OVEST S.r.l. Piazzetta Umberto Giordano, 4 20122 Milano  \nPiva 12370410966Cell. 334 6050709 email: giovanni.dalmazzo@orizzonteovest.com", "feedback": ""},
+  {"id": "138", "chiamata": "2026-03-30", "stato": "PREVENTIVO ACCETTATO", "cliente": "TAMPAN ROBERTO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "FLORAN 16/04/26 H. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "217", "gestoprevOk": true, "gestoprevNum": "801", "note": "", "feedback": ""},
+  {"id": "139", "chiamata": "2026-03-30", "stato": "PREVENTIVO INVIATO", "cliente": "DANNAZ FRANCOIS", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "GRESSAN", "appChi": "FLORAN 14/04/26 H. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "214-215", "gestoprevOk": true, "gestoprevNum": "742-743", "note": "Fraz. Hopital 2 -  3494639631", "feedback": "20/05 non rispondono"},
+  {"id": "140", "chiamata": "2026-03-26", "stato": "PREVENTIVO INVIATO", "cliente": "LA MORAINE ENCHANTE", "tipo": "SOCIETA", "richiesta": "POMPA DI CALORE", "localita": "GRESSAN", "appChi": "FLORAN 14/04/26 H. 09,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "268-262-321", "gestoprevOk": true, "gestoprevNum": "1017-1018", "note": "Chiamare Stefano Viola 3493669986", "feedback": ""},
+  {"id": "141", "chiamata": "2026-03-24", "stato": "PREVENTIVO INVIATO", "cliente": "ULISSE BRAIT", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "FLORAN 01/04/26 H. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "153", "gestoprevOk": true, "gestoprevNum": "670", "note": "3358019937 VIA GILLES DE CHEVRERES AOSTA", "feedback": ""},
+  {"id": "142", "chiamata": "2026-03-24", "stato": "PREVENTIVO ACCETTATO", "cliente": "ANNA CASALINI", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "FLORAN 01/04/26 H. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "184", "gestoprevOk": true, "gestoprevNum": "619", "note": "", "feedback": ""},
+  {"id": "143", "chiamata": "2026-03-24", "stato": "PREVENTIVO INVIATO", "cliente": "NADIR SCIESSERE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "ARNAD", "appChi": "FLORAN 01/04/26  H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "188", "gestoprevOk": true, "gestoprevNum": "616-617", "note": "3891223066 TEL LAVORO 3475255533 CDZ PER CASA", "feedback": ""},
+  {"id": "144", "chiamata": "2026-03-23", "stato": "PREVENTIVO ACCETTATO", "cliente": "RAV RACCORDO", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "SAINT PIERRE", "appChi": "Floran 01/04/26", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "243", "gestoprevOk": true, "gestoprevNum": "1001", "note": "", "feedback": ""},
+  {"id": "145", "chiamata": "2026-03-23", "stato": "PREVENTIVO ACCETTATO", "cliente": "PICCOLA GENOVA GASTRONOMIA", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "197", "gestoprevOk": true, "gestoprevNum": "662", "note": "", "feedback": ""},
+  {"id": "146", "chiamata": "2026-03-17", "stato": "PREVENTIVO INVIATO", "cliente": "COSTA-CAVIGLIONE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 26/03/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "196", "gestoprevOk": true, "gestoprevNum": "657", "note": "", "feedback": ""},
+  {"id": "147", "chiamata": "2026-03-17", "stato": "PREVENTIVO ACCETTATO", "cliente": "LIGHT CENTER", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "SAINT CHRISTOPHE", "appChi": "Per Corrado", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "180", "gestoprevOk": true, "gestoprevNum": "664", "note": "", "feedback": ""},
+  {"id": "148", "chiamata": "2026-03-16", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GIANCARLO VALENTE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "FONTAINEMORE", "appChi": "Floran si è sentito è un rudere non si", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "332-420", "gestoprevOk": true, "gestoprevNum": "1235", "note": "19/03/26 il cliente ha mandato tutto via mail non bisogna fare un sopralluogo perché è un rudere per il momento", "feedback": ""},
+  {"id": "149", "chiamata": "2026-03-16", "stato": "PREVENTIVO INVIATO", "cliente": "PERRI FRANCO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "FENIS", "appChi": "FLORAN 14/04/26 H. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "223-226", "gestoprevOk": true, "gestoprevNum": "847-848", "note": "349/8302124", "feedback": ""},
+  {"id": "150", "chiamata": "2026-03-10", "stato": "PREVENTIVO ACCETTATO", "cliente": "RISTORANTE NONUS", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "NUS", "appChi": "Floran 12/03/26 h. 18,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "162", "gestoprevOk": true, "gestoprevNum": "512", "note": "", "feedback": ""},
+  {"id": "151", "chiamata": "2026-03-10", "stato": "PREVENTIVO INVIATO", "cliente": "MICHELIN STEFANO PASTICCERIA", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 13/03/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "165", "gestoprevOk": true, "gestoprevNum": "585", "note": "", "feedback": ""},
+  {"id": "152", "chiamata": "2026-03-10", "stato": "PREVENTIVO ACCETTATO", "cliente": "PARROCCHIA DI SIGNAYES", "tipo": "", "richiesta": "CONDIZIONATORI", "localita": "SIGNAYES", "appChi": "Sopralluogo effettuato", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "170", "gestoprevOk": true, "gestoprevNum": "553", "note": "", "feedback": ""},
+  {"id": "153", "chiamata": "2026-03-10", "stato": "PREVENTIVO INVIATO", "cliente": "SCARPARI MONICA", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 17/03/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "154", "gestoprevOk": true, "gestoprevNum": "496", "note": "", "feedback": ""},
+  {"id": "154", "chiamata": "2026-03-02", "stato": "PREVENTIVO INVIATO", "cliente": "MONACO FRANCESCA", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 26/03/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "202", "gestoprevOk": true, "gestoprevNum": "666", "note": "", "feedback": ""},
+  {"id": "155", "chiamata": "2026-03-02", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GENTILE RAPHAEL", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "LA SALLE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Fraz. Cheverel, 24 - La Salle 3314913068", "feedback": ""},
+  {"id": "156", "chiamata": "2026-03-02", "stato": "PREVENTIVO ACCETTATO", "cliente": "ANSALDO ROBERTO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 10/03/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "137", "gestoprevOk": true, "gestoprevNum": "399", "note": "", "feedback": ""},
+  {"id": "157", "chiamata": "2026-03-02", "stato": "PREVENTIVO ACCETTATO", "cliente": "PELLICANO UGO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "GRESSAN", "appChi": "Floran 10/03/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "166", "gestoprevOk": true, "gestoprevNum": "537", "note": "", "feedback": ""},
+  {"id": "158", "chiamata": "2026-03-02", "stato": "PREVENTIVO ACCETTATO", "cliente": "CURSIO ELISA", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 10/03/26 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "138", "gestoprevOk": true, "gestoprevNum": "402", "note": "", "feedback": ""},
+  {"id": "159", "chiamata": "2026-03-02", "stato": "PREVENTIVO INVIATO", "cliente": "IQB SRL", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "SAINT CHRISTOPHE", "appChi": "Floran 26/03/26 h. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "190", "gestoprevOk": true, "gestoprevNum": "636", "note": "Vorrebbero sostituire un fancoil", "feedback": ""},
+  {"id": "160", "chiamata": "2026-03-02", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BECQUET SAMUELE", "tipo": "SOCIETA", "richiesta": "CELLA FRIGO", "localita": "AYAS", "appChi": "", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "182", "gestoprevOk": false, "gestoprevNum": "", "note": "Tel 3332194964 -magazzino in costruzione, fare il preventivo vorrebbe includerlo per un contributo", "feedback": ""},
+  {"id": "161", "chiamata": "2026-02-12", "stato": "PREVENTIVO ACCETTATO", "cliente": "FALLETTI DAVIDE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 13/03/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "143-147", "gestoprevOk": true, "gestoprevNum": "444-446", "note": "", "feedback": ""},
+  {"id": "162", "chiamata": "2026-02-10", "stato": "PREVENTIVO INVIATO", "cliente": "RISTORANTE LA CLOCHETTE", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "COURMAYEUR", "appChi": "Floran 10/02/26 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "87", "gestoprevOk": true, "gestoprevNum": "327", "note": "", "feedback": ""},
+  {"id": "163", "chiamata": "2026-02-09", "stato": "PREVENTIVO ACCETTATO", "cliente": "MONIOTTO STEFANO", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "SARRE", "appChi": "Floran 19/02/26 h. 09,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "112", "gestoprevOk": true, "gestoprevNum": "293", "note": "", "feedback": ""},
+  {"id": "164", "chiamata": "2026-02-05", "stato": "PREVENTIVO INVIATO", "cliente": "AGRITURISMO LA REINA", "tipo": "SOCIETA", "richiesta": "REFRIGERAZIONE", "localita": "POLLEIN", "appChi": "Floran", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "133", "gestoprevOk": true, "gestoprevNum": "403", "note": "Chiamare Barbara per sopralluogo per spostare cella e farla diventare essicatoio", "feedback": ""},
+  {"id": "165", "chiamata": "2026-02-03", "stato": "PREVENTIVO ACCETTATO", "cliente": "MANDRIOTA ELIANA", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 13/02/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "92", "gestoprevOk": true, "gestoprevNum": "232", "note": "", "feedback": ""},
+  {"id": "166", "chiamata": "2026-02-03", "stato": "NON PIU INTERESSATO", "cliente": "MUSSO GABRIELLA", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "167", "chiamata": "2026-02-03", "stato": "", "cliente": "CHUC ROBERTO", "tipo": "PRIVATO", "richiesta": "POMPA DI CALORE", "localita": "SAINT CHRISTOPHE", "appChi": "Floran 12/02/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "18/05-  in attesa che il cliente ci ricontatti  - 3333730780 FINO AL 13/02 C'E' DALLE 16,00", "feedback": ""},
+  {"id": "168", "chiamata": "2026-01-27", "stato": "PREVENTIVO INVIATO", "cliente": "DUO HAO MAI- SPACE HOME", "tipo": "NEGOZIO", "richiesta": "SPOSTAMENTO CDZ", "localita": "ST CHRISTOPHE", "appChi": "Floran 30/01/26 h. 10,30-11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "2026-02-02 00:00:00", "gestoprevOk": true, "gestoprevNum": "156", "note": "", "feedback": ""},
+  {"id": "169", "chiamata": "2026-01-27", "stato": "PREVENTIVO ACCETTATO", "cliente": "VITTORIO CANALE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 19/02/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "170", "chiamata": "2026-01-27", "stato": "PREVENTIVO ACCETTATO", "cliente": "RICCA MICHELE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "DONNAS", "appChi": "30/01/26 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "64-66", "gestoprevOk": true, "gestoprevNum": "150-151", "note": "", "feedback": ""},
+  {"id": "171", "chiamata": "2026-01-21", "stato": "PREVENTIVO INVIATO", "cliente": "MELOTTO JOELLE BAR EX QUOTIDIANO", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 05/02/26 h. 16,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "80", "gestoprevOk": true, "gestoprevNum": "194", "note": "Chiede installazione per n. 2 cdz solo freddo nelle salette del bar", "feedback": ""},
+  {"id": "172", "chiamata": "2026-01-20", "stato": "PREVENTIVO INVIATO", "cliente": "BODRO AMINA", "tipo": "PRIVATA", "richiesta": "CONDIZIONATORI", "localita": "AOSTA", "appChi": "Floran 27/01/26 h. 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "67-432", "gestoprevOk": true, "gestoprevNum": "149", "note": "AGGIUNGERE CONDIZIONATORI A CASA", "feedback": ""},
+  {"id": "173", "chiamata": "2026-01-16", "stato": "NON PIU INTERESSATO", "cliente": "CONGIATU EMANUELE", "tipo": "PRIVATO", "richiesta": "CONDIZIONATORI", "localita": "QUART", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Vorrebbe installare n. 2 cdz da 12Kw 03/03/26 ha gia' provveduto", "feedback": ""},
+  {"id": "174", "chiamata": "2026-01-15", "stato": "PREVENTIVO INVIATO", "cliente": "ALPHA 24 SUPERMERCATI", "tipo": "SOCIETA", "richiesta": "FRIGHI", "localita": "ST VINCENT", "appChi": "Floran 26/01/26 h. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "121-128", "gestoprevOk": true, "gestoprevNum": "340-341", "note": "", "feedback": ""},
+  {"id": "175", "chiamata": "2026-01-15", "stato": "PREVENTIVO INVIATO", "cliente": "CVA SPA SIG. RIGOTTI", "tipo": "", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "Floran 21/01/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "38-39", "gestoprevOk": true, "gestoprevNum": "113-114", "note": "Sopralluogo con Rigotti per condizionare altri uffici di St Vincent", "feedback": ""},
+  {"id": "176", "chiamata": "2026-01-09", "stato": "PREVENTIVO INVIATO", "cliente": "MARIANI GIULIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 27/01/26 h. 16,15", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "62", "gestoprevOk": true, "gestoprevNum": "148", "note": "alloggio sito al quinto pianto chiede  dual split (12000 + 9000 btu) disponibile di giov e ven", "feedback": ""},
+  {"id": "177", "chiamata": "2026-01-09", "stato": "PREVENTIVO INVIATO", "cliente": "CVA", "tipo": "SOCIETA", "richiesta": "RICAMBIO ARIA", "localita": "VERRES", "appChi": "Floran 02/03/26 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "150", "gestoprevOk": true, "gestoprevNum": "493", "note": "", "feedback": ""},
+  {"id": "178", "chiamata": "2026-01-08", "stato": "NON CREATO", "cliente": "ARNAD LE VIEUX", "tipo": "SOCIETA", "richiesta": "REFRIGERAZIONE", "localita": "ARNAD", "appChi": "Magri+Deval-Floran 03/02/26 h. 08,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "18/05 il Cliente non riesce a fare il lavoro", "feedback": ""},
+  {"id": "179", "chiamata": "2025-12-29", "stato": "PREVENTIVO ACCETTATO", "cliente": "IAMONTE FABRIZIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "Floran 05/02/26 h. 16,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "81", "gestoprevOk": true, "gestoprevNum": "195", "note": "", "feedback": ""},
+  {"id": "181", "chiamata": "2025-12-09", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GARIN MASSIMILIANO", "tipo": "SOCIETA", "richiesta": "REFRIGERAZIONE", "localita": "COGNE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "182", "chiamata": "2025-12-09", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BRUNO SERGIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "PRE ST DIDIER", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "183", "chiamata": "2025-11-26", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BENEDETTI MAURIZIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHAMOIS", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "184", "chiamata": "2025-11-26", "stato": "NON PIU INTERESSATO", "cliente": "SERVIDIO SARA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "21/01/26 - Ha installato con terzi", "feedback": ""},
+  {"id": "185", "chiamata": "2025-11-25", "stato": "NON CREATO", "cliente": "BLANCATO SERGIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "COURMAYEUR", "appChi": "Magri-Floran 23/12/25 h. 15,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Vuole un sopralluogo da un esperto e nel periodo 20/12-07/01/26", "feedback": ""},
+  {"id": "186", "chiamata": "2025-10-28", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GARGIULO MARCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "LA SALLE", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "187", "chiamata": "2025-11-18", "stato": "PREVENTIVO INVIATO", "cliente": "CERVINO SPA", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "CHAMOIS", "appChi": "A Magri 29/12/25 h. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "57", "gestoprevOk": true, "gestoprevNum": "137", "note": "", "feedback": ""},
+  {"id": "188", "chiamata": "2025-11-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "IMPRESA VALENTE", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "MORGEX", "appChi": "Magri", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "189", "chiamata": "2025-11-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CATONA TAMARA OLOS", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "190", "chiamata": "2025-11-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "VALDANSI GIULIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "13/11/2025 H. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "191", "chiamata": "2025-10-28", "stato": "SOPRALLUOGO NON FATTO", "cliente": "COMUNE DI NUS", "tipo": "MUNICIPIO", "richiesta": "CDZ", "localita": "NUS", "appChi": "Magri 17/10/25 H. 10,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "192", "chiamata": "2025-10-22", "stato": "SOPRALLUOGO NON FATTO", "cliente": "ANTONIO MARTINO PROSPERO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST NICOLAS", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "193", "chiamata": "2025-10-21", "stato": "PREVENTIVO INVIATO", "cliente": "HEINEKEN SPA", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "Girato contatto a Magri", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "703", "gestoprevOk": true, "gestoprevNum": "3180", "note": "", "feedback": ""},
+  {"id": "194", "chiamata": "2025-10-21", "stato": "PREVENTIVO INVIATO", "cliente": "STERRANTINO LUCA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "21/10/2025 - FLORAN", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "647", "gestoprevOk": true, "gestoprevNum": "2807", "note": "", "feedback": ""},
+  {"id": "195", "chiamata": "2025-10-20", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TROLESE TAMARA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "27/10/25 H. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "668", "gestoprevOk": true, "gestoprevNum": "3054", "note": "", "feedback": ""},
+  {"id": "196", "chiamata": "2025-10-10", "stato": "PREVENTIVO INVIATO", "cliente": "MORTARA ANGELO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "17/10/25 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "671", "gestoprevOk": true, "gestoprevNum": "3071", "note": "", "feedback": ""},
+  {"id": "197", "chiamata": "2025-10-09", "stato": "PREVENTIVO INVIATO", "cliente": "LA SPINA SAVERIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "22/10/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "710 - 37", "gestoprevOk": true, "gestoprevNum": "3204", "note": "", "feedback": ""},
+  {"id": "198", "chiamata": "2025-10-08", "stato": "NON PIU INTERESSATO", "cliente": "MANTASIA DAVIDE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "FENIS", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "14/10/25 - Acquista con Eni un 9000bth a € 1900,00 con finanziamento a tasso 0", "feedback": ""},
+  {"id": "199", "chiamata": "2025-10-08", "stato": "PREVENTIVO ACCETTATO", "cliente": "PRAMOTTON MOBILI", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "NUS", "appChi": "12/02/26 h. 10,00/10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "123", "gestoprevOk": true, "gestoprevNum": "310", "note": "", "feedback": ""},
+  {"id": "200", "chiamata": "2025-10-06", "stato": "PREVENTIVO INVIATO", "cliente": "COOP SOC MELOGRANO - CANILE/GATTILE", "tipo": "SOCIETA", "richiesta": "CDZ", "localita": "SAINT CHRISTOPHE", "appChi": "17/10/25 H.10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "747", "gestoprevOk": true, "gestoprevNum": "3437", "note": "", "feedback": ""},
+  {"id": "201", "chiamata": "2025-10-03", "stato": "PREVENTIVO INVIATO", "cliente": "MAZZOLI", "tipo": "STUDIO FOTO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "10/10/25 H. 08,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "712", "gestoprevOk": true, "gestoprevNum": "3207", "note": "", "feedback": ""},
+  {"id": "202", "chiamata": "2025-10-03", "stato": "PREVENTIVO INVIATO", "cliente": "MASSAI MANUELA", "tipo": "AVVOCATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 20/02/26 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "115", "gestoprevOk": true, "gestoprevNum": "290", "note": "", "feedback": ""},
+  {"id": "203", "chiamata": "2025-09-24", "stato": "NON PIU INTERESSATO", "cliente": "D'ONORIO ORAZIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "14/10/25-Hanno cambiato idea e visto che il cdz funziona ancora non lo cambiano", "feedback": ""},
+  {"id": "204", "chiamata": "2025-09-19", "stato": "SOPRALLUOGO NON FATTO", "cliente": "GADIN ANDREA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Magri 17/10/25 H. 10,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "205", "chiamata": "2025-09-10", "stato": "SOPRALLUOGO NON FATTO", "cliente": "AJET TEREZIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AYMAVILLES", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "206", "chiamata": "2025-09-08", "stato": "PREVENTIVO INVIATO", "cliente": "INSTITUT AGRICOLE REG", "tipo": "SCUOLA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "09/09/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "602", "gestoprevOk": true, "gestoprevNum": "2487", "note": "", "feedback": ""},
+  {"id": "207", "chiamata": "2025-09-05", "stato": "PREVENTIVO INVIATO", "cliente": "TOUR RONDE", "tipo": "SOCIETA", "richiesta": "CONDIZIONATORI", "localita": "CHAMBAVE", "appChi": "12/02/26 H. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "103-104", "gestoprevOk": true, "gestoprevNum": "296", "note": "Siamo gia' andati nel 2025 3407322715 Matteo meglio la mattina cdz uffici e controllo cdz impianto asfalto", "feedback": ""},
+  {"id": "208", "chiamata": "2025-09-04", "stato": "NON PIU INTERESSATO", "cliente": "ROSSET PIERANGELO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ROISAN", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "10/03/2026 ha gia' fatto il lavoro con altri", "feedback": ""},
+  {"id": "209", "chiamata": "2025-09-04", "stato": "PREVENTIVO INVIATO", "cliente": "JELIS DIDIER", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SAINT MARCEL", "appChi": "Floran 20/02/26 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "114", "gestoprevOk": true, "gestoprevNum": "298", "note": "", "feedback": ""},
+  {"id": "210", "chiamata": "2025-09-01", "stato": "PREVENTIVO INVIATO", "cliente": "RIZZOTTO FLAVIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "16/09/25 H. 08,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "649", "gestoprevOk": true, "gestoprevNum": "2813", "note": "", "feedback": ""},
+  {"id": "211", "chiamata": "2025-09-01", "stato": "NON CREATO", "cliente": "SOC. IL FRUTTETO", "tipo": "PRIVATO", "richiesta": "IMPIANTO FRIGO", "localita": "ST PIERRE", "appChi": "02/09/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "212", "chiamata": "2025-08-27", "stato": "PREVENTIVO ACCETTATO", "cliente": "FUCINI MICHELE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "213", "chiamata": "2025-08-22", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BASSI MARIA ELISABETTA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "214", "chiamata": "2025-08-21", "stato": "PREVENTIVO INVIATO", "cliente": "FARMACIA CONTE CROTTI", "tipo": "FARMACIA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "25/08/25 H. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "616", "gestoprevOk": true, "gestoprevNum": "2558", "note": "", "feedback": ""},
+  {"id": "215", "chiamata": "2025-08-18", "stato": "PREVENTIVO INVIATO", "cliente": "LAGIOIA GIOVANNI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "MORGEX", "appChi": "25/08/25 H. 08,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "554", "gestoprevOk": true, "gestoprevNum": "2214", "note": "", "feedback": ""},
+  {"id": "216", "chiamata": "2025-08-18", "stato": "PREVENTIVO INVIATO", "cliente": "FIOU ALEX", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "BRISSOGNE", "appChi": "28/08/2025 H. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "749", "gestoprevOk": true, "gestoprevNum": "3468", "note": "", "feedback": ""},
+  {"id": "217", "chiamata": "2025-08-18", "stato": "SOPRALLUOGO NON FATTO", "cliente": "SANSONE MARIA", "tipo": "PRIVATO", "richiesta": "PDC", "localita": "PRE ST DIDIER", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "218", "chiamata": "2025-08-18", "stato": "PREVENTIVO INVIATO", "cliente": "STEVANON/BRIGANTINO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "26/08/25 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "560/561/562", "gestoprevOk": true, "gestoprevNum": "2226/2227", "note": "", "feedback": ""},
+  {"id": "219", "chiamata": "2025-08-18", "stato": "SOPRALLUOGO NON FATTO", "cliente": "LUISI GRAZIANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "VERRES", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "220", "chiamata": "2025-08-07", "stato": "SOPRALLUOGO NON FATTO", "cliente": "COOP DE L'ENFERT SOC.", "tipo": "SOCIETA", "richiesta": "IMPIANTO ARIA", "localita": "ARVIER", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "221", "chiamata": "2025-08-05", "stato": "NON PIU INTERESSATO", "cliente": "ORLANDO FILIPPO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "non piu interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "22/08 NON E' PIU INTERESSATO E' PASSATO TROPPO TEMPO DALLA RICHIESTA", "feedback": ""},
+  {"id": "222", "chiamata": "2025-07-31", "stato": "PREVENTIVO ACCETTATO", "cliente": "BRUNOD JILI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "21/08/2025 H. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "545", "gestoprevOk": true, "gestoprevNum": "2187", "note": "PREVENTIVO ACCETTATO", "feedback": ""},
+  {"id": "223", "chiamata": "2025-07-31", "stato": "SOPRALLUOGO NON FATTO", "cliente": "BOIS MICHELE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "PONTEY", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "224", "chiamata": "2025-07-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "VERCELLIN ANNA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "225", "chiamata": "2025-07-24", "stato": "SOPRALLUOGO NON FATTO", "cliente": "ZAPPAROLI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST  NICOLAS", "appChi": "29/07/2025 H. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "626", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "226", "chiamata": "2025-07-24", "stato": "PREVENTIVO INVIATO", "cliente": "IVAT", "tipo": "MUSEO FENIS", "richiesta": "CDZ", "localita": "FENIS", "appChi": "29/07/2025 H. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "510", "gestoprevOk": true, "gestoprevNum": "2120", "note": "preventivo fatto da MAGRI", "feedback": ""},
+  {"id": "227", "chiamata": "2025-07-17", "stato": "SOPRALLUOGO NON FATTO", "cliente": "MORTARA BRUNO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "25/08/2025 H.14,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "228", "chiamata": "2025-07-14", "stato": "PREVENTIVO INVIATO", "cliente": "FORTE MARIA CHIARA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "30/07/2025 H. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "552", "gestoprevOk": true, "gestoprevNum": "2212", "note": "", "feedback": ""},
+  {"id": "229", "chiamata": "2025-07-11", "stato": "NON CREATO", "cliente": "CAPPELLARI ANGELINA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHARVENSOD", "appChi": "Floran  23/01/26 H. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "41+42", "gestoprevOk": true, "gestoprevNum": "115-116", "note": "PREVENTIVI INTESTATI A GIANCARLO CESTI PER 2 ALLOGGI", "feedback": ""},
+  {"id": "230", "chiamata": "2025-07-11", "stato": "SOPRALLUOGO NON FATTO", "cliente": "FAVRE EZIO", "tipo": "PRIVATO", "richiesta": "PDC", "localita": "ALLEIN", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "231", "chiamata": "2025-07-08", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CENTRO ADDESTRAMENTO", "tipo": "ALPINI", "richiesta": "POMPA DI CALORE", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "232", "chiamata": "2025-07-04", "stato": "SOPRALLUOGO NON FATTO", "cliente": "ALBARELLO JACOPO", "tipo": "STUDIO MEDICO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "21/10/25 H. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "697", "gestoprevOk": true, "gestoprevNum": "3189", "note": "FLORAN", "feedback": ""},
+  {"id": "233", "chiamata": "2025-07-04", "stato": "PREVENTIVO ACCETTATO", "cliente": "BERTINI SUSANNA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "26/08/25 H.9,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "PREVENTIVO ACCETTATO", "feedback": ""},
+  {"id": "234", "chiamata": "2025-07-04", "stato": "SOPRALLUOGO NON FATTO", "cliente": "LO DJASSI", "tipo": "RISTORANTE", "richiesta": "CDZ", "localita": "CHALLAND", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "236", "chiamata": "2025-07-02", "stato": "PREVENTIVO INVIATO", "cliente": "DIGEL", "tipo": "STABILIMENTO", "richiesta": "CDZ", "localita": "ST MARCEL", "appChi": "MAGRI DEVE CONTATTARE", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "567", "gestoprevOk": true, "gestoprevNum": "2254", "note": "", "feedback": ""},
+  {"id": "237", "chiamata": "2025-07-02", "stato": "PREVENTIVO ACCETTATO", "cliente": "MDM", "tipo": "STABILIMENTO", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "MAGRI DEVE CONTATTARE", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "72", "gestoprevOk": true, "gestoprevNum": "228", "note": "", "feedback": ""},
+  {"id": "238", "chiamata": "2025-07-02", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CATINO STEFANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "239", "chiamata": "2025-07-02", "stato": "SOPRALLUOGO NON FATTO", "cliente": "IMED HAMED", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST MARCEL", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "240", "chiamata": "2025-07-02", "stato": "SOPRALLUOGO NON FATTO", "cliente": "PELLEGRINOTTI EMILIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "PONTEY", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "241", "chiamata": "2025-07-01", "stato": "NON CREATO", "cliente": "BLANC MASSIMO", "tipo": "PRIVATO", "richiesta": "SCAMBIATORE", "localita": "AOSTA", "appChi": "07/10/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "242", "chiamata": "2025-07-01", "stato": "SOPRALLUOGO NON FATTO", "cliente": "COMUNITA' MONTANA", "tipo": "CUCINA", "richiesta": "CDZ", "localita": "VARINEY", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "243", "chiamata": "2025-06-30", "stato": "NON PIU INTERESSATO", "cliente": "PRODOTI REMO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "JOVENCAN", "appChi": "non piu' interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "10/02 Eravamo stati nel 2025 non gli avevamo fatto il preventivo. NON E' PIU INTERESSATO", "feedback": ""},
+  {"id": "244", "chiamata": "2025-06-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "VESAN SIMONE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "245", "chiamata": "2025-06-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "ANSELMET", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "246", "chiamata": "2025-06-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "SIGNORINI FRANCESCA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "247", "chiamata": "2025-06-30", "stato": "NON PIU INTERESSATO", "cliente": "COLASANTO MATTIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "non piu' interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "7/7/25 Chiamato per fissare sopral ma non più interessato", "feedback": ""},
+  {"id": "248", "chiamata": "2025-06-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "PERRON GIANFRANCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "249", "chiamata": "2025-06-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TRIONTE FRANCESCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AYMAVILLES", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Fraz. La Roche 15 Aymavilles tel, 340-75047160", "feedback": ""},
+  {"id": "250", "chiamata": "2025-06-30", "stato": "PREVENTIVO INVIATO", "cliente": "VENTUROTTI IRENE", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "Floran 21/04/26 h. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "227", "gestoprevOk": true, "gestoprevNum": "850", "note": "Via Monte Grivola 29 - 3336912095 eravamo già stati nel 2025 ma non avevamo mai presentato prev", "feedback": ""},
+  {"id": "251", "chiamata": "2025-06-27", "stato": "NON CREATO", "cliente": "MATTOTEA PAOLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "10/07/25 h. 08,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "252", "chiamata": "2025-06-27", "stato": "NON PIU INTERESSATO", "cliente": "CALABRESI MAURA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "CI RICHIAMA LEI", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "3271144501 Via Charrey 1 Aosta - ci faceva sapere lei perché sembrava non piu' interessata", "feedback": ""},
+  {"id": "253", "chiamata": "2025-06-27", "stato": "PREVENTIVO ACCETTATO", "cliente": "FIORANI-JORIOZ", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "07/07/25 H, 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "479/25", "gestoprevOk": true, "gestoprevNum": "1963", "note": "", "feedback": ""},
+  {"id": "254", "chiamata": "2025-06-26", "stato": "SOPRALLUOGO NON FATTO", "cliente": "TRATTORIA DES AMIS", "tipo": "IMPRESA", "richiesta": "CDZ", "localita": "ARNAD", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "255", "chiamata": "2025-06-25", "stato": "NON CREATO", "cliente": "GALLER CRISTINA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "01/07/25 H. 14,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "256", "chiamata": "2025-06-25", "stato": "PREVENTIVO INVIATO", "cliente": "LYVEROULAZ PAOLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "01/07/25 H. 15,15", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "563/25", "gestoprevOk": true, "gestoprevNum": "2228", "note": "", "feedback": ""},
+  {"id": "257", "chiamata": "2025-06-25", "stato": "NON CREATO", "cliente": "PIRANA ANDREA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "07/07/25 H. 08,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "258", "chiamata": "2025-06-24", "stato": "PREVENTIVO INVIATO", "cliente": "SIMEONE VINCENZO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "08/07/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "487/25", "gestoprevOk": true, "gestoprevNum": "2003", "note": "", "feedback": ""},
+  {"id": "259", "chiamata": "2025-06-24", "stato": "NON PIU INTERESSATO", "cliente": "ALTINI MASSIMO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "30/06/25 h. 10,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "18/04/26 Chiamato per sapere se fosse ancora interessato. Ha risposto ora non piu'", "feedback": ""},
+  {"id": "260", "chiamata": "2025-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "RONZONI DANILO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "MAGRI DEVE CONTATTARE", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "492", "gestoprevOk": true, "gestoprevNum": "2079", "note": "", "feedback": ""},
+  {"id": "261", "chiamata": "2025-06-23", "stato": "PREVENTIVO INVIATO", "cliente": "PEPELLIN ALESSANDRO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "30/06/25 H. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "453+454", "gestoprevOk": true, "gestoprevNum": "1835", "note": "", "feedback": ""},
+  {"id": "262", "chiamata": "2025-06-23", "stato": "PREVENTIVO ACCETTATO", "cliente": "CHENEY LORIS", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "01/07/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "452", "gestoprevOk": true, "gestoprevNum": "1834", "note": "accettato la REV.1", "feedback": ""},
+  {"id": "263", "chiamata": "2025-06-20", "stato": "NON CREATO", "cliente": "FINAOSTA", "tipo": "IMPRESA", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "23/06/25 h. 09,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "264", "chiamata": "2025-06-16", "stato": "PREVENTIVO INVIATO", "cliente": "FIOU MARCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "20/06/25 h. 15,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "450+451", "gestoprevOk": true, "gestoprevNum": "1833", "note": "", "feedback": ""},
+  {"id": "265", "chiamata": "2025-06-16", "stato": "NON CREATO", "cliente": "RICCI PASQUALINO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "14/07/25 h. 11,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "266", "chiamata": "2025-06-16", "stato": "PREVENTIVO ACCETTATO", "cliente": "BORTOLOTTI RICCARDO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "24/06/25 H. 10,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "436", "gestoprevOk": true, "gestoprevNum": "1808", "note": "accettato sol.2 ma non ultimato lavoro per decisione del cliente", "feedback": ""},
+  {"id": "267", "chiamata": "2025-06-12", "stato": "PREVENTIVO ACCETTATO", "cliente": "CHACARD", "tipo": "IMPRESA", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "24/06/25 h. 09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "409", "gestoprevOk": true, "gestoprevNum": "1669", "note": "", "feedback": ""},
+  {"id": "268", "chiamata": "2025-06-12", "stato": "PREVENTIVO INVIATO", "cliente": "CINEMA ST VINCENT", "tipo": "CINEMA", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "466", "gestoprevOk": true, "gestoprevNum": "1851", "note": "", "feedback": ""},
+  {"id": "269", "chiamata": "2025-06-11", "stato": "PREVENTIVO INVIATO", "cliente": "GRASSO CRISTINA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "24/06/25 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "468-464", "gestoprevOk": true, "gestoprevNum": "1852", "note": "", "feedback": ""},
+  {"id": "270", "chiamata": "2025-06-11", "stato": "NON CREATO", "cliente": "DELLOVO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "271", "chiamata": "2025-06-11", "stato": "PREVENTIVO ACCETTATO", "cliente": "PERROD ADRIANA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "17/06/25 h. 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "383", "gestoprevOk": true, "gestoprevNum": "1545", "note": "", "feedback": ""},
+  {"id": "272", "chiamata": "2025-06-09", "stato": "PREVENTIVO INVIATO", "cliente": "BAREI ELIANO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "18/06/2025 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "389", "gestoprevOk": true, "gestoprevNum": "1598", "note": "", "feedback": ""},
+  {"id": "273", "chiamata": "2025-06-09", "stato": "PREVENTIVO INVIATO", "cliente": "ARPA", "tipo": "LAB. ANALISI", "richiesta": "CDZ", "localita": "ST CHRISTOPHE", "appChi": "20/06/25 h. 11,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "465", "gestoprevOk": true, "gestoprevNum": "1846", "note": "", "feedback": ""},
+  {"id": "274", "chiamata": "2025-06-06", "stato": "PREVENTIVO INVIATO", "cliente": "AVERBENE FRANCESCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "20/06/2025 H. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "404-405", "gestoprevOk": true, "gestoprevNum": "1667", "note": "", "feedback": ""},
+  {"id": "275", "chiamata": "2025-06-05", "stato": "PREVENTIVO ACCETTATO", "cliente": "NAHUM MARCELLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "PRE ST DIDIER", "appChi": "11/06/25 H. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "467", "gestoprevOk": true, "gestoprevNum": "1843", "note": "", "feedback": ""},
+  {"id": "276", "chiamata": "2025-06-05", "stato": "NON CREATO", "cliente": "SACCAGNI GIANLUCA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "11/06/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "277", "chiamata": "2025-06-05", "stato": "SOPRALLUOGO NON FATTO", "cliente": "FERDINANDO ACCAREINO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "278", "chiamata": "2025-06-05", "stato": "NON CREATO", "cliente": "FIABANE MASSIMO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "GRESSAN", "appChi": "30/06/25 H. 09,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "279", "chiamata": "2025-06-05", "stato": "PREVENTIVO INVIATO", "cliente": "BALLARINI ALEX", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST CHRISTOPHE", "appChi": "18/06/25 H. 08,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "dal 391 al 401", "gestoprevOk": true, "gestoprevNum": "dal 1607 al 1617", "note": "", "feedback": ""},
+  {"id": "280", "chiamata": "2025-06-04", "stato": "NON CREATO", "cliente": "FORTUNATO ALESSANDRO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "10/06/2025 H. 11,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "281", "chiamata": "2025-06-03", "stato": "SOPRALLUOGO NON FATTO", "cliente": "CHINCHERE UGO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "282", "chiamata": "2025-06-03", "stato": "PREVENTIVO INVIATO", "cliente": "GAL PAOLA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "TORGNON", "appChi": "13/06/25 H. 10,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "384-385", "gestoprevOk": true, "gestoprevNum": "1546-1548", "note": "", "feedback": ""},
+  {"id": "283", "chiamata": "2025-06-03", "stato": "PREVENTIVO ACCETTATO", "cliente": "LIBRERIA EVOLUZIONE", "tipo": "LIBRERIA", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "06/06/2025 H. 9,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "371", "gestoprevOk": true, "gestoprevNum": "1491", "note": "", "feedback": ""},
+  {"id": "284", "chiamata": "2025-05-27", "stato": "PREVENTIVO INVIATO", "cliente": "BOSCARDIN FEDERICA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "09/06/25 H. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "381", "gestoprevOk": true, "gestoprevNum": "1537", "note": "", "feedback": ""},
+  {"id": "285", "chiamata": "2025-05-27", "stato": "PREVENTIVO ACCETTATO", "cliente": "LAVANDERIA INDUSTRIA", "tipo": "LAVANDERIA", "richiesta": "CDZ", "localita": "POLLEIN", "appChi": "30/05/25 H. 09.30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "370", "gestoprevOk": true, "gestoprevNum": "1490", "note": "", "feedback": ""},
+  {"id": "286", "chiamata": "2025-05-26", "stato": "NON CREATO", "cliente": "SUSHI ORIGAMI", "tipo": "RISTORANTE", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "30/05/2025 H. 11,00", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "287", "chiamata": "2025-05-22", "stato": "NON CREATO", "cliente": "HOTEL EDELWEISS", "tipo": "ALBERGO", "richiesta": "CDZ SPA", "localita": "CERVINIA", "appChi": "MAGRI DEVE CONTATTARE", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "288", "chiamata": "2025-05-19", "stato": "PREVENTIVO INVIATO", "cliente": "MOLINELLI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "27/05/2025 H. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "354", "gestoprevOk": true, "gestoprevNum": "1453", "note": "", "feedback": ""},
+  {"id": "289", "chiamata": "2025-05-14", "stato": "PREVENTIVO INVIATO", "cliente": "FRASSY LORENZO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ROISAN", "appChi": "19/05/2025 H. 08,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "345", "gestoprevOk": true, "gestoprevNum": "1427", "note": "", "feedback": ""},
+  {"id": "290", "chiamata": "2025-05-14", "stato": "PREVENTIVO INVIATO", "cliente": "ROLLAND WALTER", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ARNAD", "appChi": "26/05/26 h. 14,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "304", "gestoprevOk": true, "gestoprevNum": "1153", "note": "20/05/26 - eravamo gia stati a maggio 2025, il cliente è ancora interessato", "feedback": ""},
+  {"id": "291", "chiamata": "2025-05-14", "stato": "NON CREATO", "cliente": "CAPITAIN DES ALPES", "tipo": "LOCALE", "richiesta": "CDZ", "localita": "COURMAYEUR", "appChi": "19/06/25 H. 08,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "292", "chiamata": "2025-05-13", "stato": "PREVENTIVO INVIATO", "cliente": "CAMPOMIZZI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST CHRISTOPHE", "appChi": "21/05/2025 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "338", "gestoprevOk": true, "gestoprevNum": "1421", "note": "", "feedback": ""},
+  {"id": "293", "chiamata": "2025-05-07", "stato": "PREVENTIVO INVIATO", "cliente": "ARLIAN", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "12/05/2025 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "301-302", "gestoprevOk": true, "gestoprevNum": "1303+1304", "note": "", "feedback": ""},
+  {"id": "294", "chiamata": "2025-04-30", "stato": "SOPRALLUOGO NON FATTO", "cliente": "NERI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "QUART", "appChi": "", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "295", "chiamata": "2025-04-29", "stato": "PREVENTIVO ACCETTATO", "cliente": "BOVIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "12/05/2025 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "336/25", "gestoprevOk": true, "gestoprevNum": "1410", "note": "", "feedback": ""},
+  {"id": "296", "chiamata": "2025-04-28", "stato": "PREVENTIVO INVIATO", "cliente": "MARRAMOTTI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "14/05/2025 H. 10,15", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "318/25", "gestoprevOk": true, "gestoprevNum": "1375", "note": "", "feedback": ""},
+  {"id": "297", "chiamata": "2024-08-19", "stato": "NON CREATO", "cliente": "ROGGERO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "MORGEX", "appChi": "12/05/2025 H. 09,30", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "", "feedback": ""},
+  {"id": "298", "chiamata": "2025-04-28", "stato": "PREVENTIVO INVIATO", "cliente": "MARRA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "GRESSAN", "appChi": "16/05/2025 H. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "337/25", "gestoprevOk": true, "gestoprevNum": "1411", "note": "", "feedback": ""},
+  {"id": "299", "chiamata": "2025-04-28", "stato": "PREVENTIVO ACCETTATO", "cliente": "LANIECE", "tipo": "STUDIO MEDICO", "richiesta": "CDZ", "localita": "VERRES", "appChi": "30/04/25 h. 07,45", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "264/25", "gestoprevOk": true, "gestoprevNum": "1198", "note": "", "feedback": ""},
+  {"id": "300", "chiamata": "2025-04-23", "stato": "PREVENTIVO ACCETTATO", "cliente": "UGOLIN", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "07/05/25 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "280/25", "gestoprevOk": true, "gestoprevNum": "1267", "note": "", "feedback": ""},
+  {"id": "301", "chiamata": "2025-04-23", "stato": "NON PIU INTERESSATO", "cliente": "BOERIS", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST VINCENT", "appChi": "non piu' interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Il cliente comunica che ha già risolto con altra ditta", "feedback": ""},
+  {"id": "302", "chiamata": "2025-04-22", "stato": "PREVENTIVO INVIATO", "cliente": "VECCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "13/05/25 H. 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "355+356+357", "gestoprevOk": true, "gestoprevNum": "1446", "note": "", "feedback": ""},
+  {"id": "303", "chiamata": "2025-04-15", "stato": "PREVENTIVO INVIATO", "cliente": "NICOSIA", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "ST PIERRE", "appChi": "13/05/25 h. 16,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "299", "gestoprevOk": true, "gestoprevNum": "1376-1377", "note": "", "feedback": ""},
+  {"id": "304", "chiamata": "2025-04-15", "stato": "PREVENTIVO RIFIUTATO", "cliente": "MIGLIACCIO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "SARRE", "appChi": "12/02/25 h. 15,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "321-322/25", "gestoprevOk": true, "gestoprevNum": "1389-1391", "note": "PREVENTIVO RIFIUTATO", "feedback": ""},
+  {"id": "305", "chiamata": "2025-04-14", "stato": "PREVENTIVO INVIATO", "cliente": "RAMIREZ", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "16/05/25 h. 14,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "319-320", "gestoprevOk": true, "gestoprevNum": "1376-1377", "note": "", "feedback": ""},
+  {"id": "306", "chiamata": "2025-04-14", "stato": "PREVENTIVO INVIATO", "cliente": "NONUS", "tipo": "RIST.", "richiesta": "CDZ", "localita": "NUS", "appChi": "2025-05-15 00:00:00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "424+425", "gestoprevOk": true, "gestoprevNum": "1698", "note": "", "feedback": ""},
+  {"id": "307", "chiamata": "2025-04-11", "stato": "PREVENTIVO INVIATO", "cliente": "VESCO", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "29/04/2025 h.09,30", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "284", "gestoprevOk": true, "gestoprevNum": "1275", "note": "", "feedback": ""},
+  {"id": "308", "chiamata": "2025-04-11", "stato": "PREVENTIVO ACCETTATO", "cliente": "MORELLI", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "AOSTA", "appChi": "05/05/2025 h. 11,45", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "283", "gestoprevOk": true, "gestoprevNum": "1252+1253", "note": "PREVENTIVO ACCETTATO", "feedback": ""},
+  {"id": "309", "chiamata": "2025-04-11", "stato": "NON PIU INTERESSATO", "cliente": "BORDON", "tipo": "PRIVATO", "richiesta": "CDZ 2 allogi", "localita": "AOSTA", "appChi": "non piu' interessato", "appData": "", "appOra": "", "evolexOk": false, "evolexNum": "", "gestoprevOk": false, "gestoprevNum": "", "note": "Avevamo eseguito il sopralluogo ma non il preventivo HA FATTO FARE IL LAVORO AD ALTRI", "feedback": ""},
+  {"id": "310", "chiamata": "2025-04-10", "stato": "PREVENTIVO INVIATO", "cliente": "FLORIS", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "NUS", "appChi": "29/04/2025 h. 11,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "463-659", "gestoprevOk": true, "gestoprevNum": "1845", "note": "", "feedback": ""},
+  {"id": "311", "chiamata": "2025-04-08", "stato": "PREVENTIVO INVIATO", "cliente": "GALVANIN", "tipo": "PRIVATO", "richiesta": "CDZ", "localita": "CHATILLON", "appChi": "29/04/2025 h.09,00", "appData": "", "appOra": "", "evolexOk": true, "evolexNum": "286/25", "gestoprevOk": true, "gestoprevNum": "1274", "note": "", "feedback": ""}
 ];
 
 // ===== UTILITIES =====
@@ -598,54 +886,111 @@ function appDateClass(dateStr) {
   return 'app-futuro';
 }
 
-// ===== FILTER & SORT =====
-function getFiltered() {
-  const q = document.getElementById('search').value.toLowerCase().trim();
-  const fs = document.getElementById('f-stato').value;
-  const ft = document.getElementById('f-tipo').value;
-  const fr = document.getElementById('f-rich').value;
-  const ftec = document.getElementById('f-tec').value;
-  const fev = document.getElementById('f-ev').value;
-  const fgp = document.getElementById('f-gp').value;
+// ===== HELPERS =====
+function evOk(r)  { return !!(r.evolexOk    || r.evolex); }
+function gpOk(r)  { return !!(r.gestoprevOk || r.gestoprev); }
 
+// ===== FILTRO =====
+function getFiltered() {
   return records.filter(r => {
-    if (q && !JSON.stringify(r).toLowerCase().includes(q)) return false;
-    // filtro stato dalla toolbar
-    if (fs) {
-      if (fs === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
-      else if (r.stato !== fs) return false;
+    if (filters.search && !JSON.stringify(r).toLowerCase().includes(filters.search)) return false;
+    if (filters.stato) {
+      if (filters.stato === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
+      else if (r.stato !== filters.stato) return false;
     }
-    // filtro stato dalla sidebar (indipendente dalla toolbar)
-    if (activeFilter) {
-      if (activeFilter === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
-      else if (r.stato !== activeFilter) return false;
-    }
-    if (ft && r.tipo?.toUpperCase() !== ft.toUpperCase()) return false;
-    if (fr && !r.richiesta?.toUpperCase().includes(fr.toUpperCase())) return false;
-    if (ftec && !r.appChi?.toLowerCase().includes(ftec.toLowerCase())) return false;
-    // filtri EV/GP dalla toolbar
-    const evOk = !!(r.evolexOk || r.evolex);
-    const gpOk = !!(r.gestoprevOk || r.gestoprev);
-    if (fev === 'si' && !evOk) return false;
-    if (fev === 'no' && evOk) return false;
-    if (fgp === 'si' && !gpOk) return false;
-    if (fgp === 'no' && gpOk) return false;
-    // filtri EV/GP dalla sidebar
-    if (activeGestFilter) {
-      if (activeGestFilter === 'ev-si' && !evOk) return false;
-      if (activeGestFilter === 'ev-no' && evOk) return false;
-      if (activeGestFilter === 'gp-si' && !gpOk) return false;
-      if (activeGestFilter === 'gp-no' && gpOk) return false;
-    }
+    if (filters.tec  && !r.appChi?.toLowerCase().includes(filters.tec.toLowerCase())) return false;
+    if (filters.tipo && r.tipo?.toUpperCase() !== filters.tipo.toUpperCase()) return false;
+    if (filters.rich && !r.richiesta?.toUpperCase().includes(filters.rich.toUpperCase())) return false;
+    if (filters.gest === 'ev-si' && !evOk(r)) return false;
+    if (filters.gest === 'ev-no' &&  evOk(r)) return false;
+    if (filters.gest === 'gp-si' && !gpOk(r)) return false;
+    if (filters.gest === 'gp-no' &&  gpOk(r)) return false;
     return true;
   }).sort((a,b) => {
-    let va = a[sortCol] || ''; let vb = b[sortCol] || '';
-    if (va < vb) return sortAsc ? -1 : 1;
-    if (va > vb) return sortAsc ? 1 : -1;
+    const va = a[sortCol]||'', vb = b[sortCol]||'';
+    if (va < vb) return sortAsc ? -1 :  1;
+    if (va > vb) return sortAsc ?  1 : -1;
     return 0;
   });
 }
 
+// Sidebar: toggle — secondo clic sullo stesso valore azzera
+function setSidebarFilter(key, val) {
+  filters[key] = (filters[key] === val) ? '' : val;
+  // se tocco gest, allinea le select toolbar
+  syncToolbarSelects();
+  renderTable();
+}
+
+// Toolbar select: imposta direttamente (no toggle)
+function setToolbarFilter(key, val) {
+  filters[key] = val;
+  // se tocco tipo/rich/stato dalla toolbar, non tocco sidebar
+  // se tocco ev/gp dalla toolbar, li mappo su filters.gest
+  if (key === 'ev' || key === 'gp') {
+    // le select ev e gp sono rimosse dalla toolbar — non dovrebbe arrivare qui
+  }
+  syncToolbarSelects();
+  renderTable();
+}
+
+// Mantiene toolbar select allineate a filters
+function syncToolbarSelects() {
+  document.getElementById('f-stato').value = filters.stato;
+  document.getElementById('f-tipo').value  = filters.tipo;
+  document.getElementById('f-rich').value  = filters.rich;
+  // ev/gp dalla toolbar replicano filters.gest
+  const evVal = (filters.gest === 'ev-si') ? 'si' : (filters.gest === 'ev-no') ? 'no' : '';
+  const gpVal = (filters.gest === 'gp-si') ? 'si' : (filters.gest === 'gp-no') ? 'no' : '';
+  document.getElementById('f-ev').value = evVal;
+  document.getElementById('f-gp').value = gpVal;
+  // tecnico select
+  const fTec = document.getElementById('f-tec');
+  if (fTec) fTec.value = filters.tec;
+}
+
+// Aggiorna badge contatori e active nella sidebar
+function updateSidebar() {
+  // badge contatori (sempre su tutti i record, non filtrati)
+  document.getElementById('badge-all' ).textContent = records.length;
+  document.getElementById('badge-sopr').textContent = records.filter(r => r.stato === 'SOPRALLUOGO NON FATTO').length;
+  document.getElementById('badge-prev').textContent = records.filter(r => r.stato === 'PREVENTIVO INVIATO').length;
+  document.getElementById('badge-acc' ).textContent = records.filter(r => r.stato?.includes('ACCETTATO')).length;
+  document.getElementById('badge-npi' ).textContent = records.filter(r => r.stato === 'NON PIU INTERESSATO').length;
+  document.getElementById('badge-ev-si').textContent = records.filter(r =>  evOk(r)).length;
+  document.getElementById('badge-ev-no').textContent = records.filter(r => !evOk(r)).length;
+  document.getElementById('badge-gp-si').textContent = records.filter(r =>  gpOk(r)).length;
+  document.getElementById('badge-gp-no').textContent = records.filter(r => !gpOk(r)).length;
+
+  // active stato: confronto stringa diretta
+  document.querySelectorAll('[data-filter-stato]').forEach(n => {
+    const v = n.getAttribute('data-filter-stato');
+    n.classList.toggle('active', v === filters.stato);
+  });
+
+  // active gest
+  document.querySelectorAll('[data-filter-gest]').forEach(n => {
+    const v = n.getAttribute('data-filter-gest');
+    n.classList.toggle('active', v === filters.gest);
+  });
+
+  // ricostruisci lista tecnici nella sidebar e select toolbar
+  const tecnici = [...new Set(
+    records.map(r => r.appChi).filter(t => t && t.length < 30 && !t.includes('/'))
+  )].sort();
+
+  const fTec = document.getElementById('f-tec');
+  const curTec = filters.tec;
+  fTec.innerHTML = '<option value="">Tutti i tecnici</option>' +
+    tecnici.map(t => `<option value="${t}">${t}</option>`).join('');
+  fTec.value = curTec;
+
+  document.getElementById('sidebar-tecnici').innerHTML = tecnici.slice(0, 8).map(t =>
+    `<div class="nav-item ${filters.tec === t ? 'active' : ''}" onclick="setSidebarFilter('tec','${t.replace(/'/g,"\\'")}')">` +
+    `<span class="icon">👤</span>${t}` +
+    `<span class="badge" style="background:var(--text3)">${records.filter(r => r.appChi === t).length}</span></div>`
+  ).join('');
+}
 function sortBy(col) {
   if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
   document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
@@ -654,7 +999,6 @@ function sortBy(col) {
   renderTable();
 }
 
-// ===== RENDER TABLE =====
 function renderTable() {
   const data = getFiltered();
   const tbody = document.getElementById('tbody');
@@ -687,6 +1031,7 @@ function renderTable() {
   }
   updateStats();
   updateSidebar();
+  syncToolbarSelects();
   renderDetail();
   updateOggiBanner();
   if (currentView === 'kanban') renderKanban();
@@ -702,49 +1047,6 @@ function updateStats() {
   document.getElementById('st5').textContent = all.length;
 }
 
-function updateSidebar() {
-  document.getElementById('badge-all').textContent = records.length;
-  document.getElementById('badge-sopr').textContent = records.filter(r=>r.stato==='SOPRALLUOGO NON FATTO').length;
-  document.getElementById('badge-prev').textContent = records.filter(r=>r.stato==='PREVENTIVO INVIATO').length;
-  document.getElementById('badge-acc').textContent = records.filter(r=>r.stato?.includes('ACCETTATO')).length;
-  document.getElementById('badge-npi').textContent = records.filter(r=>r.stato==='NON PIU INTERESSATO').length;
-
-  // contatori EV/GP
-  const evSi = records.filter(r=>!!(r.evolexOk||r.evolex)).length;
-  const evNo = records.filter(r=>!(r.evolexOk||r.evolex)).length;
-  const gpSi = records.filter(r=>!!(r.gestoprevOk||r.gestoprev)).length;
-  const gpNo = records.filter(r=>!(r.gestoprevOk||r.gestoprev)).length;
-  document.getElementById('badge-ev-si').textContent = evSi;
-  document.getElementById('badge-ev-no').textContent = evNo;
-  document.getElementById('badge-gp-si').textContent = gpSi;
-  document.getElementById('badge-gp-no').textContent = gpNo;
-
-  // sincronizza active sidebar gest con toolbar select (se utente usa la select)
-  const fev = document.getElementById('f-ev').value;
-  const fgp = document.getElementById('f-gp').value;
-  if (!fev && !fgp) {
-    activeGestFilter = '';
-    document.querySelectorAll('.nav-item[data-filter-gest]').forEach(n=>n.classList.remove('active'));
-  }
-
-  // Tecnici
-  const tecnici = [...new Set(records.map(r=>r.appChi).filter(t=>t&&t.length<30&&!t.includes('/')))].sort();
-  const fTec = document.getElementById('f-tec');
-  const curVal = fTec.value;
-  fTec.innerHTML = '<option value="">Tutti i tecnici</option>' + tecnici.map(t=>`<option value="${t}">${t}</option>`).join('');
-  fTec.value = curVal;
-
-  const sb = document.getElementById('sidebar-tecnici');
-  sb.innerHTML = tecnici.slice(0,8).map(t => {
-    const isActive = fTec.value === t;
-    return `<div class="nav-item ${isActive?'active':''}" onclick="setTecnico('${t}',this)"><span class="icon">👤</span>${t}<span class="badge" style="background:var(--text3)">${records.filter(r=>r.appChi===t).length}</span></div>`;
-  }).join('');
-}
-
-function setTecnico(t, el) {
-  document.getElementById('f-tec').value = t;
-  renderTable();
-}
 
 // ===== OGGI BANNER =====
 function updateOggiBanner() {
@@ -1016,34 +1318,6 @@ function deleteRecord(id) {
   save();
   renderTable();
   toast('Pratica eliminata','error');
-}
-
-// ===== SIDEBAR FILTER =====
-function filterSidebar(stato, el) {
-  activeFilter = activeFilter === stato ? '' : stato;
-  // rimuovi active solo dai nav-item di stato (non tecnici)
-  document.querySelectorAll('.nav-item[data-filter-stato]').forEach(n => n.classList.remove('active'));
-  if (el && activeFilter) el.classList.add('active');
-  renderTable();
-}
-
-function filterGest(tipo, val, el) {
-  const key = tipo + '-' + val;
-  activeGestFilter = activeGestFilter === key ? '' : key;
-  document.getElementById('f-' + tipo).value = activeGestFilter ? val : '';
-  document.querySelectorAll('.nav-item[data-filter-gest]').forEach(n => n.classList.remove('active'));
-  if (activeGestFilter && el) el.classList.add('active');
-  renderTable();
-}
-
-function setTecnico(t, el) {
-  const fTec = document.getElementById('f-tec');
-  if (fTec.value === t) {
-    fTec.value = '';
-  } else {
-    fTec.value = t;
-  }
-  renderTable();
 }
 
 // ===== EXPORT / IMPORT =====
