@@ -210,6 +210,10 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-logo">⚡ GestPrev <span>/ Sopralluoghi & Preventivi</span></div>
+    <div id="sync-indicator" style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">
+      <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+      <span id="sync-label">Connessione…</span>
+    </div>
     <div style="flex:1"></div>
     <button class="btn" id="btn-notif" title="Notifiche">🔔 <span id="notif-count" class="badge danger" style="display:none">0</span></button>
     <button class="btn primary" id="btn-new">＋ Nuova pratica</button>
@@ -502,21 +506,177 @@ const filters = {
   rich:  '',
 };
 
-// ===== STORAGE =====
-function save() {
-  try { localStorage.setItem('gestprev_v2', JSON.stringify(records)); } catch(e) {}
-  updateMeta();
+// ===== SUPABASE CONFIG =====
+const SB_URL = 'https://beblwldhaskregazebky.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlYmx3bGRoYXNrcmVnYXplYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMTQ1MDAsImV4cCI6MjA5OTY5MDUwMH0.WGFIbkACzhOlofzuLQj4nMzO1GWRBDPK731uTtK14ZQ';
+const SB_HEADERS = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+// Mappa campi JS → colonne DB
+function toDb(r) {
+  return {
+    id:             r.id,
+    chiamata:       r.chiamata       || null,
+    stato:          r.stato          || null,
+    cliente:        r.cliente        || null,
+    tipo:           r.tipo           || null,
+    richiesta:      r.richiesta      || null,
+    localita:       r.localita       || null,
+    app_chi:        r.appChi         || null,
+    app_data:       r.appData        || null,
+    app_ora:        r.appOra         || null,
+    evolex_ok:      !!r.evolexOk,
+    evolex_num:     r.evolexNum      || null,
+    gestoprev_ok:   !!r.gestoprevOk,
+    gestoprev_num:  r.gestoprevNum   || null,
+    note:           r.note           || null,
+    feedback:       r.feedback       || null,
+  };
 }
-function load() {
+function fromDb(d) {
+  return {
+    id:           d.id,
+    chiamata:     d.chiamata      || '',
+    stato:        d.stato         || '',
+    cliente:      d.cliente       || '',
+    tipo:         d.tipo          || '',
+    richiesta:    d.richiesta     || '',
+    localita:     d.localita      || '',
+    appChi:       d.app_chi       || '',
+    appData:      d.app_data      || '',
+    appOra:       d.app_ora       || '',
+    evolexOk:     !!d.evolex_ok,
+    evolexNum:    d.evolex_num    || '',
+    gestoprevOk:  !!d.gestoprev_ok,
+    gestoprevNum: d.gestoprev_num || '',
+    note:         d.note          || '',
+    feedback:     d.feedback      || '',
+  };
+}
+
+// ===== STORAGE (Supabase) =====
+async function load() {
+  updateMeta('Connessione a Supabase…');
   try {
-    const d = localStorage.getItem('gestprev_v2');
-    if (d) { records = JSON.parse(d); return; }
-  } catch(e) {}
-  records = JSON.parse(JSON.stringify(INITIAL_DATA));
-  save();
+    // Conta righe esistenti
+    const countRes = await fetch(`${SB_URL}/rest/v1/pratiche?select=id`, {
+      headers: { ...SB_HEADERS, 'Prefer': 'count=exact' }
+    });
+    const total = parseInt(countRes.headers.get('content-range')?.split('/')[1] || '0');
+
+    if (total === 0) {
+      // Prima volta: carica i dati iniziali da Excel
+      updateMeta('Primo avvio: carico 305 pratiche…');
+      await seedDatabase();
+    }
+
+    // Leggi tutte le pratiche (paginato a 1000)
+    const res = await fetch(`${SB_URL}/rest/v1/pratiche?select=*&order=chiamata.desc&limit=1000`, {
+      headers: SB_HEADERS
+    });
+    const data = await res.json();
+    records = data.map(fromDb);
+    updateMeta(records.length + ' pratiche · Supabase ☁️');
+    renderTable();
+    updateOggiBanner();
+    startRealtime();
+  } catch(e) {
+    updateMeta('⚠️ Offline — dati locali');
+    toast('Connessione Supabase fallita, modalità offline', 'warn');
+    const local = localStorage.getItem('gestprev_offline');
+    if (local) records = JSON.parse(local);
+    else records = JSON.parse(JSON.stringify(INITIAL_DATA));
+    renderTable();
+  }
 }
-function updateMeta() {
-  document.getElementById('data-meta').textContent = records.length + ' pratiche · localStorage';
+
+async function seedDatabase() {
+  // Inserisce i dati iniziali a blocchi di 50
+  const chunks = [];
+  for (let i = 0; i < INITIAL_DATA.length; i += 50)
+    chunks.push(INITIAL_DATA.slice(i, i + 50));
+  for (const chunk of chunks) {
+    await fetch(`${SB_URL}/rest/v1/pratiche`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'ignore-duplicates' },
+      body: JSON.stringify(chunk.map(toDb))
+    });
+  }
+  toast('305 pratiche migrate su Supabase ✓', 'success');
+}
+
+async function sbUpsert(r) {
+  // Salva su Supabase, fallback offline
+  localStorage.setItem('gestprev_offline', JSON.stringify(records));
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/pratiche`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(toDb(r))
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch(e) {
+    toast('Errore salvataggio remoto: ' + e.message, 'error');
+  }
+}
+
+async function sbDelete(id) {
+  localStorage.setItem('gestprev_offline', JSON.stringify(records));
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/pratiche?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: SB_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+  } catch(e) {
+    toast('Errore eliminazione remota: ' + e.message, 'error');
+  }
+}
+
+// Polling ogni 15 secondi per aggiornamenti da altri utenti
+let lastPoll = Date.now();
+function startRealtime() {
+  setInterval(async () => {
+    try {
+      const since = new Date(lastPoll - 2000).toISOString();
+      const res = await fetch(
+        `${SB_URL}/rest/v1/pratiche?select=*&updated_at=gte.${encodeURIComponent(since)}&limit=100`,
+        { headers: SB_HEADERS }
+      );
+      const updated = await res.json();
+      if (updated.length > 0) {
+        updated.forEach(d => {
+          const r = fromDb(d);
+          const idx = records.findIndex(x => x.id === r.id);
+          if (idx >= 0) records[idx] = r;
+          else records.unshift(r);
+        });
+        lastPoll = Date.now();
+        renderTable();
+      }
+    } catch(e) {}
+  }, 15000);
+}
+
+function updateMeta(msg) {
+  const label = document.getElementById('sync-label');
+  const dot = document.getElementById('sync-dot');
+  const meta = document.getElementById('data-meta');
+  if (msg) {
+    if (label) label.textContent = msg;
+    if (dot) dot.style.background = 'var(--warn)';
+    if (meta) meta.textContent = msg;
+  } else {
+    const txt = records.length + ' pratiche · Supabase ☁️';
+    if (label) label.textContent = '● Online';
+    if (dot) dot.style.background = 'var(--accent2)';
+    if (meta) meta.textContent = txt;
+  }
+}
+
+// Funzione save non più necessaria per localStorage, manteniamo per compatibilità
+function save() {
+  localStorage.setItem('gestprev_offline', JSON.stringify(records));
+  updateMeta();
 }
 
 // ===== INITIAL DATA (campione dal file Excel) =====
@@ -1170,12 +1330,13 @@ function renderDetail() {
   `;
 }
 
-function cambiaStato(id, nuovoStato) {
+async function cambiaStato(id, nuovoStato) {
   const r = records.find(x=>x.id===id);
   if (!r) return;
   r.stato = nuovoStato;
   save();
   renderTable();
+  await sbUpsert(r);
   toast('Stato aggiornato: ' + nuovoStato, 'success');
 }
 
@@ -1274,60 +1435,75 @@ function toggleGestField(which) {
   if (!ok) num.value = '';
   if (ok) num.focus();
 }
-function saveRecord() {
+async function saveRecord() {
   const cliente = document.getElementById('f-cliente').value.trim();
   if (!cliente) { toast('Inserisci il nome del cliente','warn'); return; }
   const data = {
-    chiamata: document.getElementById('f-chiamata').value,
-    stato: document.getElementById('f-stato2').value,
+    chiamata:     document.getElementById('f-chiamata').value,
+    stato:        document.getElementById('f-stato2').value,
     cliente,
-    tipo: document.getElementById('f-tipo2').value,
-    richiesta: document.getElementById('f-rich2').value,
-    localita: document.getElementById('f-localita').value.toUpperCase(),
-    appChi: document.getElementById('f-app-chi').value,
-    appData: document.getElementById('f-app-data').value,
-    appOra: document.getElementById('f-app-ora').value,
-    evolexOk: document.getElementById('f-evolex-ok').checked,
-    evolexNum: document.getElementById('f-evolex-num').value.trim(),
-    gestoprevOk: document.getElementById('f-gestoprev-ok').checked,
+    tipo:         document.getElementById('f-tipo2').value,
+    richiesta:    document.getElementById('f-rich2').value,
+    localita:     document.getElementById('f-localita').value.toUpperCase(),
+    appChi:       document.getElementById('f-app-chi').value,
+    appData:      document.getElementById('f-app-data').value,
+    appOra:       document.getElementById('f-app-ora').value,
+    evolexOk:     document.getElementById('f-evolex-ok').checked,
+    evolexNum:    document.getElementById('f-evolex-num').value.trim(),
+    gestoprevOk:  document.getElementById('f-gestoprev-ok').checked,
     gestoprevNum: document.getElementById('f-gestoprev-num').value.trim(),
-    note: document.getElementById('f-note').value,
-    feedback: document.getElementById('f-feedback').value,
+    note:         document.getElementById('f-note').value,
+    feedback:     document.getElementById('f-feedback').value,
   };
+  closeModalForce();
   if (editingId) {
     const idx = records.findIndex(x=>x.id===editingId);
     if (idx>=0) records[idx] = {...records[idx], ...data};
-    toast('Pratica aggiornata', 'success');
+    toast('Salvataggio in corso…', 'success');
+    await sbUpsert(records[idx >= 0 ? idx : 0]);
+    toast('Pratica aggiornata ✓', 'success');
   } else {
-    records.unshift({id: uid(), ...data});
-    toast('Nuova pratica aggiunta', 'success');
+    const nr = {id: uid(), ...data};
+    records.unshift(nr);
+    toast('Salvataggio in corso…', 'success');
+    await sbUpsert(nr);
+    toast('Nuova pratica aggiunta ✓', 'success');
   }
   save();
-  closeModalForce();
   renderTable();
 }
 function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalForce(); }
 function closeModalForce() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
 // ===== DELETE =====
-function deleteRecord(id) {
+async function deleteRecord(id) {
   if (!confirm('Eliminare questa pratica?')) return;
   records = records.filter(x=>x.id!==id);
   if (selectedId === id) selectedId = null;
   save();
   renderTable();
+  await sbDelete(id);
   toast('Pratica eliminata','error');
 }
 
-function resetDati() {
-  if (!confirm('Ripristina i 305 dati originali dall\'Excel? Tutte le modifiche locali andranno perse.')) return;
-  localStorage.removeItem('gestprev_v2');
-  records = JSON.parse(JSON.stringify(INITIAL_DATA));
-  save();
-  selectedId = null;
-  Object.keys(filters).forEach(k => filters[k] = '');
-  renderTable();
-  toast('Dati ripristinati: ' + records.length + ' pratiche', 'success');
+async function resetDati() {
+  if (!confirm('Ripristina i dati originali dall\'Excel su Supabase? Tutte le modifiche andranno perse.')) return;
+  updateMeta('Reset in corso…');
+  try {
+    // Cancella tutto
+    await fetch(`${SB_URL}/rest/v1/pratiche?id=neq.XXXXXX`, {
+      method: 'DELETE', headers: SB_HEADERS
+    });
+    // Reinserisce
+    await seedDatabase();
+    await load();
+    selectedId = null;
+    Object.keys(filters).forEach(k => filters[k] = '');
+    renderTable();
+    toast('Dati ripristinati: ' + records.length + ' pratiche', 'success');
+  } catch(e) {
+    toast('Errore nel reset: ' + e.message, 'error');
+  }
 }
 
 // ===== EXPORT / IMPORT =====
@@ -1380,10 +1556,10 @@ document.addEventListener('keydown', e => {
 });
 
 // ===== INIT =====
-load();
-renderTable();
-updateOggiBanner();
-setTimeout(()=>{ if(Notification.permission==='granted') checkAndNotify(); }, 2000);
+updateMeta('Connessione a Supabase…');
+load().then(() => {
+  setTimeout(()=>{ if(Notification.permission==='granted') checkAndNotify(); }, 2000);
+});
 </script>
 </body>
 </html>
