@@ -632,29 +632,71 @@ async function sbDelete(id) {
   }
 }
 
-// Polling ogni 15 secondi per aggiornamenti da altri utenti
-let lastPoll = Date.now();
+// Realtime WebSocket — aggiornamenti istantanei da altri utenti
 function startRealtime() {
-  setInterval(async () => {
-    try {
-      const since = new Date(lastPoll - 2000).toISOString();
-      const res = await fetch(
-        `${SB_URL}/rest/v1/pratiche?select=*&updated_at=gte.${encodeURIComponent(since)}&limit=100`,
-        { headers: SB_HEADERS }
-      );
-      const updated = await res.json();
-      if (updated.length > 0) {
-        updated.forEach(d => {
-          const r = fromDb(d);
+  const wsUrl = SB_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
+  let ws;
+  let heartbeat;
+
+  function connect() {
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      // Join channel pratiche
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:pratiche',
+        event: 'phx_join',
+        payload: {},
+        ref: '1'
+      }));
+      // Heartbeat ogni 30s
+      heartbeat = setInterval(() => {
+        ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: '0' }));
+      }, 30000);
+      const dot = document.getElementById('sync-dot');
+      const lbl = document.getElementById('sync-label');
+      if (dot) dot.style.background = 'var(--accent2)';
+      if (lbl) lbl.textContent = '● Live';
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.event !== 'INSERT' && msg.event !== 'UPDATE' && msg.event !== 'DELETE') return;
+        const payload = msg.payload?.record || msg.payload?.old_record;
+        if (!payload) return;
+
+        if (msg.event === 'DELETE') {
+          const oldId = msg.payload?.old_record?.id;
+          if (oldId) {
+            records = records.filter(x => x.id !== oldId);
+            if (selectedId === oldId) selectedId = null;
+          }
+        } else {
+          const r = fromDb(payload);
           const idx = records.findIndex(x => x.id === r.id);
           if (idx >= 0) records[idx] = r;
           else records.unshift(r);
-        });
-        lastPoll = Date.now();
+        }
+        updateMeta();
         renderTable();
-      }
-    } catch(e) {}
-  }, 15000);
+      } catch(err) {}
+    };
+
+    ws.onclose = () => {
+      clearInterval(heartbeat);
+      const dot = document.getElementById('sync-dot');
+      const lbl = document.getElementById('sync-label');
+      if (dot) dot.style.background = 'var(--warn)';
+      if (lbl) lbl.textContent = '⟳ Riconnessione…';
+      // Riconnette dopo 3 secondi
+      setTimeout(connect, 3000);
+    };
+
+    ws.onerror = () => ws.close();
+  }
+
+  connect();
 }
 
 function updateMeta(msg) {
