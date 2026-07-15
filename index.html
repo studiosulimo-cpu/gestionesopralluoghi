@@ -263,7 +263,7 @@
       <div style="flex:1"></div>
       <div style="padding:12px 14px; font-size:10px; color:var(--text3); line-height:1.5">
         <div id="data-meta">Dati in localStorage</div>
-        <div style="margin-top:4px"><span style="cursor:pointer;color:var(--accent)" onclick="exportCSV()">⬇ Esporta CSV</span> · <span style="cursor:pointer;color:var(--text3)" onclick="importData()">⬆ Importa</span></div>
+        <div style="margin-top:4px"><span style="cursor:pointer;color:var(--accent)" onclick="exportCSV()">⬇ Esporta CSV</span> · <span style="cursor:pointer;color:var(--text3)" onclick="importData()">⬆ Importa</span> · <span style="cursor:pointer;color:var(--danger)" onclick="resetDati()">↺ Reset</span></div>
       </div>
     </div>
 
@@ -504,16 +504,15 @@ const filters = {
 
 // ===== STORAGE =====
 function save() {
-  try { localStorage.setItem('gestprev_v1', JSON.stringify(records)); } catch(e) {}
+  try { localStorage.setItem('gestprev_v2', JSON.stringify(records)); } catch(e) {}
   updateMeta();
 }
 function load() {
   try {
-    const d = localStorage.getItem('gestprev_v1');
+    const d = localStorage.getItem('gestprev_v2');
     if (d) { records = JSON.parse(d); return; }
   } catch(e) {}
-  // DATI DI ESEMPIO dal file Excel
-  records = INITIAL_DATA;
+  records = JSON.parse(JSON.stringify(INITIAL_DATA));
   save();
 }
 function updateMeta() {
@@ -1318,6 +1317,17 @@ function deleteRecord(id) {
   save();
   renderTable();
   toast('Pratica eliminata','error');
+}
+
+function resetDati() {
+  if (!confirm('Ripristina i 305 dati originali dall\'Excel? Tutte le modifiche locali andranno perse.')) return;
+  localStorage.removeItem('gestprev_v2');
+  records = JSON.parse(JSON.stringify(INITIAL_DATA));
+  save();
+  selectedId = null;
+  Object.keys(filters).forEach(k => filters[k] = '');
+  renderTable();
+  toast('Dati ripristinati: ' + records.length + ' pratiche', 'success');
 }
 
 // ===== EXPORT / IMPORT =====
