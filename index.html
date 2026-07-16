@@ -231,33 +231,33 @@
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Filtra stato</div>
-      <div class="nav-item" data-filter-stato="" onclick="setSidebarFilter('stato','')">
+      <div class="nav-item" id="sb-stato-tutti" onclick="sbStato('')">
         <span class="icon">📋</span> Tutti
       </div>
-      <div class="nav-item" data-filter-stato="SOPRALLUOGO NON FATTO" onclick="setSidebarFilter('stato','SOPRALLUOGO NON FATTO')">
+      <div class="nav-item" id="sb-stato-sopr" onclick="sbStato('SOPRALLUOGO NON FATTO')">
         <span class="icon">📍</span> Sopralluogo <span id="badge-sopr" class="badge warn">0</span>
       </div>
-      <div class="nav-item" data-filter-stato="PREVENTIVO INVIATO" onclick="setSidebarFilter('stato','PREVENTIVO INVIATO')">
+      <div class="nav-item" id="sb-stato-prev" onclick="sbStato('PREVENTIVO INVIATO')">
         <span class="icon">📄</span> Preventivo <span id="badge-prev" class="badge">0</span>
       </div>
-      <div class="nav-item" data-filter-stato="ACCETTATO" onclick="setSidebarFilter('stato','ACCETTATO')">
+      <div class="nav-item" id="sb-stato-acc" onclick="sbStato('ACCETTATO')">
         <span class="icon">✅</span> Accettati <span id="badge-acc" class="badge" style="background:var(--accent2)">0</span>
       </div>
-      <div class="nav-item" data-filter-stato="NON PIU INTERESSATO" onclick="setSidebarFilter('stato','NON PIU INTERESSATO')">
+      <div class="nav-item" id="sb-stato-npi" onclick="sbStato('NON PIU INTERESSATO')">
         <span class="icon">❌</span> Non interessati <span id="badge-npi" class="badge danger">0</span>
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Gestionale</div>
-      <div class="nav-item" data-filter-gest="ev-si" onclick="setSidebarFilter('gest','ev-si')">
+      <div class="nav-item" id="sb-ev-si" onclick="sbGest('ev-si')">
         <span class="icon"><span class="gest-badge gest-ev-si" style="font-size:9px">EV ✓</span></span> Evolex inserito <span id="badge-ev-si" class="badge" style="background:var(--accent2)">0</span>
       </div>
-      <div class="nav-item" data-filter-gest="ev-no" onclick="setSidebarFilter('gest','ev-no')">
+      <div class="nav-item" id="sb-ev-no" onclick="sbGest('ev-no')">
         <span class="icon"><span class="gest-badge gest-ev-no" style="font-size:9px">EV —</span></span> Evolex mancante <span id="badge-ev-no" class="badge warn">0</span>
       </div>
-      <div class="nav-item" data-filter-gest="gp-si" onclick="setSidebarFilter('gest','gp-si')">
+      <div class="nav-item" id="sb-gp-si" onclick="sbGest('gp-si')">
         <span class="icon"><span class="gest-badge gest-gp-si" style="font-size:9px">GP ✓</span></span> Gestoprev inserito <span id="badge-gp-si" class="badge" style="background:var(--accent)">0</span>
       </div>
-      <div class="nav-item" data-filter-gest="gp-no" onclick="setSidebarFilter('gest','gp-no')">
+      <div class="nav-item" id="sb-gp-no" onclick="sbGest('gp-no')">
         <span class="icon"><span class="gest-badge gest-gp-no" style="font-size:9px">GP —</span></span> Gestoprev mancante <span id="badge-gp-no" class="badge warn">0</span>
       </div>
 
@@ -294,7 +294,7 @@
           <span class="sicon">🔍</span>
           <input type="text" id="search" placeholder="Cerca cliente, nota, località..." oninput="filters.search=this.value.toLowerCase().trim();renderTable()">
         </div>
-        <select id="f-stato" onchange="setToolbarFilter('stato',this.value)">
+        <select id="f-stato" onchange="filters.stato=this.value; renderTable()">
           <option value="">Tutti gli stati</option>
           <option>SOPRALLUOGO NON FATTO</option>
           <option>PREVENTIVO INVIATO</option>
@@ -302,30 +302,22 @@
           <option>NON PIU INTERESSATO</option>
           <option>NON CREATO</option>
         </select>
-        <select id="f-tipo" onchange="setToolbarFilter('tipo',this.value)">
+        <select id="f-tipo" onchange="filters.tipo=this.value; renderTable()">
           <option value="">Tipo cliente</option>
           <option>PRIVATO</option>
           <option>SOCIETA</option>
         </select>
-        <select id="f-rich" onchange="setToolbarFilter('rich',this.value)">
+        <select id="f-rich" onchange="filters.rich=this.value; renderTable()">
           <option value="">Tutte le richieste</option>
           <option>CDZ</option>
           <option>PDC</option>
           <option>FV</option>
           <option>REFRIGERAZIONE</option>
+          <option>CONDIZIONATORI</option>
+          <option>POMPA DI CALORE</option>
         </select>
-        <select id="f-tec" onchange="setToolbarFilter('tec',this.value)">
+        <select id="f-tec" onchange="filters.tec=this.value; renderTable()">
           <option value="">Tutti i tecnici</option>
-        </select>
-        <select id="f-ev" onchange="setSidebarFilter('gest', this.value==='si'?'ev-si':this.value==='no'?'ev-no':''); this.value=this.value">
-          <option value="">Evolex: tutti</option>
-          <option value="si">EV ✓ inserito</option>
-          <option value="no">EV — mancante</option>
-        </select>
-        <select id="f-gp" onchange="setSidebarFilter('gest', this.value==='si'?'gp-si':this.value==='no'?'gp-no':''); this.value=this.value">
-          <option value="">Gestoprev: tutti</option>
-          <option value="si">GP ✓ inserito</option>
-          <option value="no">GP — mancante</option>
         </select>
         <div class="view-toggle">
           <button class="view-btn active" id="vb-table" onclick="switchView('table',null)">☰</button>
@@ -345,7 +337,8 @@
                 <th onclick="sortBy('tipo')">Tipo <span class="sort-arrow">↕</span></th>
                 <th onclick="sortBy('richiesta')">Richiesta <span class="sort-arrow">↕</span></th>
                 <th onclick="sortBy('localita')">Località <span class="sort-arrow">↕</span></th>
-                <th>Appuntamento</th>
+                <th onclick="sortBy('appChi')">Tecnico <span class="sort-arrow">↕</span></th>
+                <th onclick="sortBy('appData')">Data appunt. <span class="sort-arrow">↕</span></th>
                 <th>EV / GP</th>
                 <th>Note</th>
                 <th>Azioni</th>
@@ -1099,7 +1092,7 @@ function getFiltered() {
       if (filters.stato === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
       else if (r.stato !== filters.stato) return false;
     }
-    if (filters.tec  && !r.appChi?.toLowerCase().includes(filters.tec.toLowerCase())) return false;
+    if (filters.tec  && !r.appChi?.startsWith(filters.tec)) return false;
     if (filters.tipo && r.tipo?.toUpperCase() !== filters.tipo.toUpperCase()) return false;
     if (filters.rich && !r.richiesta?.toUpperCase().includes(filters.rich.toUpperCase())) return false;
     if (filters.gest === 'ev-si' && !evOk(r)) return false;
@@ -1116,43 +1109,28 @@ function getFiltered() {
 }
 
 // Sidebar: toggle — secondo clic sullo stesso valore azzera
-function setSidebarFilter(key, val) {
-  filters[key] = (filters[key] === val) ? '' : val;
-  // se tocco gest, allinea le select toolbar
-  syncToolbarSelects();
-  renderTable();
-}
-
-// Toolbar select: imposta direttamente (no toggle)
-function setToolbarFilter(key, val) {
-  filters[key] = val;
-  // se tocco tipo/rich/stato dalla toolbar, non tocco sidebar
-  // se tocco ev/gp dalla toolbar, li mappo su filters.gest
-  if (key === 'ev' || key === 'gp') {
-    // le select ev e gp sono rimosse dalla toolbar — non dovrebbe arrivare qui
-  }
-  syncToolbarSelects();
-  renderTable();
-}
-
-// Mantiene toolbar select allineate a filters
-function syncToolbarSelects() {
+// Sidebar stato — toggle se già attivo
+function sbStato(val) {
+  filters.stato = (filters.stato === val) ? '' : val;
   document.getElementById('f-stato').value = filters.stato;
-  document.getElementById('f-tipo').value  = filters.tipo;
-  document.getElementById('f-rich').value  = filters.rich;
-  // ev/gp dalla toolbar replicano filters.gest
-  const evVal = (filters.gest === 'ev-si') ? 'si' : (filters.gest === 'ev-no') ? 'no' : '';
-  const gpVal = (filters.gest === 'gp-si') ? 'si' : (filters.gest === 'gp-no') ? 'no' : '';
-  document.getElementById('f-ev').value = evVal;
-  document.getElementById('f-gp').value = gpVal;
-  // tecnico select
-  const fTec = document.getElementById('f-tec');
-  if (fTec) fTec.value = filters.tec;
+  renderTable();
 }
 
-// Aggiorna badge contatori e active nella sidebar
+// Sidebar gestionale — toggle
+function sbGest(val) {
+  filters.gest = (filters.gest === val) ? '' : val;
+  renderTable();
+}
+
+// Sidebar tecnico — toggle
+function sbTec(val) {
+  filters.tec = (filters.tec === val) ? '' : val;
+  document.getElementById('f-tec').value = filters.tec;
+  renderTable();
+}
+
+// Aggiorna badge e active nella sidebar
 function updateSidebar() {
-  // badge contatori (sempre su tutti i record, non filtrati)
   document.getElementById('badge-all' ).textContent = records.length;
   document.getElementById('badge-sopr').textContent = records.filter(r => r.stato === 'SOPRALLUOGO NON FATTO').length;
   document.getElementById('badge-prev').textContent = records.filter(r => r.stato === 'PREVENTIVO INVIATO').length;
@@ -1163,33 +1141,39 @@ function updateSidebar() {
   document.getElementById('badge-gp-si').textContent = records.filter(r =>  gpOk(r)).length;
   document.getElementById('badge-gp-no').textContent = records.filter(r => !gpOk(r)).length;
 
-  // active stato: confronto stringa diretta
-  document.querySelectorAll('[data-filter-stato]').forEach(n => {
-    const v = n.getAttribute('data-filter-stato');
-    n.classList.toggle('active', v === filters.stato);
+  // Active stato
+  const statoMap = {
+    'sb-stato-tutti': '', 'sb-stato-sopr': 'SOPRALLUOGO NON FATTO',
+    'sb-stato-prev': 'PREVENTIVO INVIATO', 'sb-stato-acc': 'ACCETTATO',
+    'sb-stato-npi': 'NON PIU INTERESSATO',
+  };
+  Object.entries(statoMap).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', filters.stato === val);
   });
 
-  // active gest
-  document.querySelectorAll('[data-filter-gest]').forEach(n => {
-    const v = n.getAttribute('data-filter-gest');
-    n.classList.toggle('active', v === filters.gest);
+  // Active gest
+  ['sb-ev-si','sb-ev-no','sb-gp-si','sb-gp-no'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', filters.gest === id.replace('sb-',''));
   });
 
-  // ricostruisci lista tecnici nella sidebar e select toolbar
-  const tecnici = [...new Set(
-    records.map(r => r.appChi).filter(t => t && t.length < 30 && !t.includes('/'))
-  )].sort();
-
+  // Tecnici — estrae solo il nome prima di date/ore
+  const tecSet = new Set();
+  records.forEach(r => {
+    if (!r.appChi) return;
+    const nome = r.appChi.split(/[\s\d\/\-]/)[0].trim();
+    if (nome && nome.length >= 3 && nome.length <= 20 && /^[A-Za-zÀ-ÿ\-]+$/.test(nome)) tecSet.add(nome);
+  });
+  const tecnici = [...tecSet].sort();
   const fTec = document.getElementById('f-tec');
-  const curTec = filters.tec;
   fTec.innerHTML = '<option value="">Tutti i tecnici</option>' +
     tecnici.map(t => `<option value="${t}">${t}</option>`).join('');
-  fTec.value = curTec;
-
-  document.getElementById('sidebar-tecnici').innerHTML = tecnici.slice(0, 8).map(t =>
-    `<div class="nav-item ${filters.tec === t ? 'active' : ''}" onclick="setSidebarFilter('tec','${t.replace(/'/g,"\\'")}')">` +
+  fTec.value = filters.tec;
+  document.getElementById('sidebar-tecnici').innerHTML = tecnici.slice(0, 10).map(t =>
+    `<div class="nav-item ${filters.tec === t ? 'active' : ''}" onclick="sbTec('${t.replace(/'/g, "\\'")}')">` +
     `<span class="icon">👤</span>${t}` +
-    `<span class="badge" style="background:var(--text3)">${records.filter(r => r.appChi === t).length}</span></div>`
+    `<span class="badge" style="background:var(--text3)">${records.filter(r => r.appChi && r.appChi.startsWith(t)).length}</span></div>`
   ).join('');
 }
 function sortBy(col) {
@@ -1218,7 +1202,10 @@ function renderTable() {
         <td><span class="tipo ${tipoClass(r.tipo)}">${r.tipo || '—'}</span></td>
         <td><span class="rich">${r.richiesta || '—'}</span></td>
         <td><span style="font-size:12px;color:var(--text2)">${r.localita || '—'}</span></td>
-        <td>${r.appData ? `<div class="app-cell"><div class="app-chi">${r.appChi||''}</div><div class="app-data ${appDateClass(r.appData)}">${fmtDate(r.appData)}${r.appOra?' h.'+r.appOra:''}</div></div>` : (r.appChi?`<span style="color:var(--text3);font-size:11px">${r.appChi}</span>`:'<span style="color:var(--text3)">—</span>')}</td>
+        <td><span style="font-size:12px;color:var(--accent2);font-weight:600">${r.appChi || '—'}</span></td>
+        <td>${r.appData
+          ? `<span class="app-data ${appDateClass(r.appData)}" style="font-size:12px;font-weight:600">${fmtDate(r.appData)}${r.appOra?' h.'+r.appOra:''}</span>`
+          : '<span style="color:var(--text3)">—</span>'}</td>
         <td><div class="gest-wrap">${gestBadge(r)}</div></td>
         <td><div class="cell-clip" style="max-width:200px;font-size:11.5px;color:var(--text2)" title="${r.note||''}">${r.note||'—'}</div></td>
         <td>
@@ -1232,7 +1219,6 @@ function renderTable() {
   }
   updateStats();
   updateSidebar();
-  syncToolbarSelects();
   renderDetail();
   updateOggiBanner();
   if (currentView === 'kanban') renderKanban();
