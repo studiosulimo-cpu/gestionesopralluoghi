@@ -1092,7 +1092,7 @@ function getFiltered() {
       if (filters.stato === 'ACCETTATO') { if (!r.stato?.toUpperCase().includes('ACCETTATO')) return false; }
       else if (r.stato !== filters.stato) return false;
     }
-    if (filters.tec  && !r.appChi?.startsWith(filters.tec)) return false;
+    if (filters.tec  && !r.appChi?.toLowerCase().startsWith(filters.tec.toLowerCase())) return false;
     if (filters.tipo && r.tipo?.toUpperCase() !== filters.tipo.toUpperCase()) return false;
     if (filters.rich && !r.richiesta?.toUpperCase().includes(filters.rich.toUpperCase())) return false;
     if (filters.gest === 'ev-si' && !evOk(r)) return false;
@@ -1124,8 +1124,13 @@ function sbGest(val) {
 
 // Sidebar tecnico — toggle
 function sbTec(val) {
-  filters.tec = (filters.tec === val) ? '' : val;
-  document.getElementById('f-tec').value = filters.tec;
+  // de-escape eventuali entità HTML dal data attribute
+  const txt = document.createElement('textarea');
+  txt.innerHTML = val;
+  const clean = txt.value;
+  filters.tec = (filters.tec === clean) ? '' : clean;
+  const sel = document.getElementById('f-tec');
+  if (sel) sel.value = filters.tec;
   renderTable();
 }
 
@@ -1158,23 +1163,27 @@ function updateSidebar() {
     if (el) el.classList.toggle('active', filters.gest === id.replace('sb-',''));
   });
 
-  // Tecnici — estrae solo il nome prima di date/ore
+  // Tecnici — riconosce i nomi reali dei tecnici (whitelist estendibile)
+  const TECNICI_NOTI = ['Floran','Magri','Ponessa','Ruben','Corrado','Desandre'];
   const tecSet = new Set();
   records.forEach(r => {
     if (!r.appChi) return;
-    const nome = r.appChi.split(/[\s\d\/\-]/)[0].trim();
-    if (nome && nome.length >= 3 && nome.length <= 20 && /^[A-Za-zÀ-ÿ\-]+$/.test(nome)) tecSet.add(nome);
+    const primaParola = r.appChi.trim().split(/[\s\d\/\-,]/)[0];
+    // match case-insensitive contro la whitelist
+    const noto = TECNICI_NOTI.find(t => t.toLowerCase() === primaParola.toLowerCase());
+    if (noto) tecSet.add(noto);
   });
   const tecnici = [...tecSet].sort();
   const fTec = document.getElementById('f-tec');
   fTec.innerHTML = '<option value="">Tutti i tecnici</option>' +
     tecnici.map(t => `<option value="${t}">${t}</option>`).join('');
   fTec.value = filters.tec;
-  document.getElementById('sidebar-tecnici').innerHTML = tecnici.slice(0, 10).map(t =>
-    `<div class="nav-item ${filters.tec === t ? 'active' : ''}" onclick="sbTec('${t.replace(/'/g, "\\'")}')">` +
-    `<span class="icon">👤</span>${t}` +
-    `<span class="badge" style="background:var(--text3)">${records.filter(r => r.appChi && r.appChi.startsWith(t)).length}</span></div>`
-  ).join('');
+  document.getElementById('sidebar-tecnici').innerHTML = tecnici.slice(0, 10).map(t => {
+    const safe = t.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="nav-item ${filters.tec === t ? 'active' : ''}" data-tec="${safe}">` +
+    `<span class="icon">👤</span>${safe}` +
+    `<span class="badge" style="background:var(--text3)">${records.filter(r => r.appChi && r.appChi.toLowerCase().startsWith(t.toLowerCase())).length}</span></div>`;
+  }).join('');
 }
 function sortBy(col) {
   if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
@@ -1576,6 +1585,13 @@ function toast(msg, type='success') {
 // ===== NOTIF BUTTON =====
 document.getElementById('btn-notif').addEventListener('click', richiediNotifiche);
 document.getElementById('btn-new').addEventListener('click', openNew);
+
+// ===== EVENT DELEGATION TECNICI (robusto per qualsiasi nome) =====
+document.getElementById('sidebar-tecnici').addEventListener('click', (e) => {
+  const item = e.target.closest('[data-tec]');
+  if (!item) return;
+  sbTec(item.getAttribute('data-tec'));
+});
 
 // ===== KEYBOARD =====
 document.addEventListener('keydown', e => {
