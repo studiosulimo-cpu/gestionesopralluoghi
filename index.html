@@ -231,7 +231,7 @@
       </div>
 
       <div class="sidebar-section" style="margin-top:8px">Filtra stato</div>
-      <div class="nav-item" id="sb-stato-tutti" onclick="sbStato('')">
+      <div class="nav-item" id="sb-stato-tutti" onclick="resetFiltri()">
         <span class="icon">📋</span> Tutti
       </div>
       <div class="nav-item" id="sb-stato-sopr" onclick="sbStato('SOPRALLUOGO NON FATTO')">
@@ -319,6 +319,7 @@
         <select id="f-tec" onchange="filters.tec=this.value; renderTable()">
           <option value="">Tutti i tecnici</option>
         </select>
+        <button class="btn" id="btn-reset-filtri" onclick="resetFiltri()" title="Azzera tutti i filtri">✕ Azzera filtri</button>
         <div class="view-toggle">
           <button class="view-btn active" id="vb-table" onclick="switchView('table',null)">☰</button>
           <button class="view-btn" id="vb-kanban" onclick="switchView('kanban',null)">▦</button>
@@ -1134,6 +1135,23 @@ function sbTec(val) {
   renderTable();
 }
 
+// Azzera TUTTI i filtri in un colpo
+function resetFiltri() {
+  filters.search = '';
+  filters.stato  = '';
+  filters.tec    = '';
+  filters.gest   = '';
+  filters.tipo   = '';
+  filters.rich   = '';
+  // resetta i controlli visibili
+  const s = document.getElementById('search');   if (s) s.value = '';
+  const fs = document.getElementById('f-stato'); if (fs) fs.value = '';
+  const ft = document.getElementById('f-tipo');  if (ft) ft.value = '';
+  const fr = document.getElementById('f-rich');  if (fr) fr.value = '';
+  const fc = document.getElementById('f-tec');   if (fc) fc.value = '';
+  renderTable();
+}
+
 // Aggiorna badge e active nella sidebar
 function updateSidebar() {
   document.getElementById('badge-all' ).textContent = records.length;
@@ -1147,8 +1165,9 @@ function updateSidebar() {
   document.getElementById('badge-gp-no').textContent = records.filter(r => !gpOk(r)).length;
 
   // Active stato
+  const nessunFiltro = !filters.search && !filters.stato && !filters.tec && !filters.gest && !filters.tipo && !filters.rich;
   const statoMap = {
-    'sb-stato-tutti': '', 'sb-stato-sopr': 'SOPRALLUOGO NON FATTO',
+    'sb-stato-sopr': 'SOPRALLUOGO NON FATTO',
     'sb-stato-prev': 'PREVENTIVO INVIATO', 'sb-stato-acc': 'ACCETTATO',
     'sb-stato-npi': 'NON PIU INTERESSATO',
   };
@@ -1156,6 +1175,9 @@ function updateSidebar() {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('active', filters.stato === val);
   });
+  // "Tutti" attivo solo quando nessun filtro è impostato
+  const elTutti = document.getElementById('sb-stato-tutti');
+  if (elTutti) elTutti.classList.toggle('active', nessunFiltro);
 
   // Active gest
   ['sb-ev-si','sb-ev-no','sb-gp-si','sb-gp-no'].forEach(id => {
