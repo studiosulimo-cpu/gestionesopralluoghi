@@ -69,9 +69,12 @@
 
   .stato { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
   .stato-sopralluogo { background: #fef3c7; color: #92400e; }
+  .stato-soprfatto { background: #fde68a; color: #78350f; }
+  .stato-prevcorso { background: #e0e7ff; color: #3730a3; }
   .stato-preventivo { background: #dbeafe; color: #1d4ed8; }
   .stato-accettato { background: #dcfce7; color: #15803d; }
   .stato-nonpiu { background: #fee2e2; color: #b91c1c; }
+  .stato-prevno { background: #f3e8ff; color: #7e22ce; }
   .stato-vuoto { background: #f3f4f6; color: var(--text3); }
 
   .sol { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; white-space: nowrap; }
@@ -121,6 +124,26 @@
   .row-act-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; color: var(--text2); cursor: pointer; font-size: 11px; }
   .row-act-btn:hover { border-color: var(--accent); color: var(--accent); }
   @media(max-width:800px){ .sidebar{display:none} .form-grid{grid-template-columns:1fr} .stats-bar{display:none} }
+
+  /* CALENDARIO */
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cal-dow { background: var(--surface); padding: 7px; text-align: center; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); }
+  .cal-cell { background: var(--surface); min-height: 96px; padding: 5px 6px; display: flex; flex-direction: column; gap: 3px; }
+  .cal-cell.other { background: #fafbfc; }
+  .cal-cell.oggi { background: #eff6ff; }
+  .cal-daynum { font-size: 11px; font-weight: 600; color: var(--text2); }
+  .cal-cell.oggi .cal-daynum { color: var(--accent); font-weight: 800; }
+  .cal-ev { font-size: 10.5px; padding: 2px 5px; border-radius: 4px; color: #fff; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .cal-ev:hover { filter: brightness(0.92); }
+  /* settimana */
+  .calw-grid { display: grid; grid-template-columns: 54px repeat(7,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .calw-head { background: var(--surface); padding:7px 4px; text-align:center; font-size:11px; font-weight:700; color:var(--text2); }
+  .calw-head small { display:block; font-size:10px; color:var(--text3); font-weight:500; }
+  .calw-hour { background: var(--surface); padding:4px; text-align:right; font-size:10px; color:var(--text3); }
+  .calw-slot { background: var(--surface); min-height:34px; padding:2px; display:flex; flex-direction:column; gap:2px; }
+  .calw-slot.oggi { background:#eff6ff; }
+  .cal-ev-legend { display:inline-flex; align-items:center; gap:5px; }
+  .cal-ev-dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
 </style>
 </head>
 <body>
@@ -130,6 +153,7 @@
     <div class="tabs">
       <div class="tab active" id="tab-lead" onclick="switchPage('lead')">📋 Lead <span class="cnt" id="cnt-lead">0</span></div>
       <div class="tab" id="tab-gest" onclick="switchPage('gest')">🔧 Gestione <span class="cnt" id="cnt-gest">0</span></div>
+      <div class="tab" id="tab-cal" onclick="switchPage('cal')">📅 Calendario</div>
     </div>
     <div style="flex:1"></div>
     <div id="sync-indicator"><span id="sync-dot"></span><span id="sync-label">Connessione…</span></div>
@@ -200,8 +224,10 @@
           <div class="search-box"><span class="sicon">🔍</span><input type="text" id="search-gest" placeholder="Cerca cliente, comune, feedback…" oninput="filters.search=this.value.toLowerCase().trim();renderGest()"></div>
           <select id="f-stato" onchange="filters.stato=this.value; renderGest()">
             <option value="">Tutti gli stati</option>
-            <option>SOPRALLUOGO NON FATTO</option><option>PREVENTIVO INVIATO</option>
-            <option>PREVENTIVO ACCETTATO</option><option>NON PIU INTERESSATO</option><option>NON CREATO</option>
+            <option>SOPRALLUOGO NON FATTO</option><option>SOPRALLUOGO FATTO</option>
+            <option>PREVENTIVO IN CORSO</option><option>PREVENTIVO INVIATO</option>
+            <option>PREVENTIVO ACCETTATO</option><option>NON PIU INTERESSATO</option>
+            <option>PREVENTIVO NON FATTO</option>
           </select>
           <select id="f-sol" onchange="filters.sol=this.value; renderGest()">
             <option value="">Tutte le soluzioni</option>
@@ -241,6 +267,26 @@
         </div>
         <div id="view-kanban" style="display:none;flex:1;overflow:auto;padding:12px;gap:12px"></div>
       </div>
+
+      <!-- PAGINA 3: CALENDARIO -->
+      <div class="page" id="page-cal">
+        <div class="toolbar">
+          <button class="btn" onclick="calPrev()">‹ Prec.</button>
+          <button class="btn" onclick="calToday()">Oggi</button>
+          <button class="btn" onclick="calNext()">Succ. ›</button>
+          <div style="font-size:15px;font-weight:700;min-width:200px;text-align:center" id="cal-title">—</div>
+          <div style="flex:1"></div>
+          <select id="cal-tec-filter" onchange="renderCal()">
+            <option value="">Tutti i tecnici</option>
+          </select>
+          <div style="display:flex;gap:4px">
+            <button class="btn" id="cvb-mese" onclick="calView('mese')" style="background:var(--accent);border-color:var(--accent);color:#fff">Mese</button>
+            <button class="btn" id="cvb-sett" onclick="calView('sett')">Settimana</button>
+          </div>
+        </div>
+        <div id="cal-legend" style="padding:8px 16px;display:flex;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--surface);font-size:11.5px"></div>
+        <div style="flex:1;overflow:auto;padding:12px" id="cal-body"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -264,8 +310,10 @@
         <div class="field"><label>Stato pratica</label>
           <select id="m-stato">
             <option value="">— seleziona —</option>
-            <option>SOPRALLUOGO NON FATTO</option><option>PREVENTIVO INVIATO</option>
-            <option>PREVENTIVO ACCETTATO</option><option>NON PIU INTERESSATO</option><option>NON CREATO</option>
+            <option>SOPRALLUOGO NON FATTO</option><option>SOPRALLUOGO FATTO</option>
+            <option>PREVENTIVO IN CORSO</option><option>PREVENTIVO INVIATO</option>
+            <option>PREVENTIVO ACCETTATO</option><option>NON PIU INTERESSATO</option>
+            <option>PREVENTIVO NON FATTO</option>
           </select>
         </div>
         <div class="field"><label>Tecnico</label><input type="text" id="m-tecnico" placeholder="Es. Floran, Magri"></div>
@@ -337,8 +385,8 @@ function normChiave(email, tel){
 }
 function fmtDate(d){ if(!d) return ''; const p=d.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : d; }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function statoClass(s){ if(!s)return'stato-vuoto'; const u=s.toUpperCase(); if(u.includes('SOPRALLUOGO'))return'stato-sopralluogo'; if(u.includes('PREVENTIVO INVIATO'))return'stato-preventivo'; if(u.includes('ACCETTATO'))return'stato-accettato'; if(u.includes('NON PIU'))return'stato-nonpiu'; return'stato-vuoto'; }
-function statoShort(s){ const m={'SOPRALLUOGO NON FATTO':'Sopralluogo','PREVENTIVO INVIATO':'Preventivo','PREVENTIVO ACCETTATO':'Accettato ✓','NON PIU INTERESSATO':'Non interess.','NON CREATO':'Non creato'}; return m[s]||s||'—'; }
+function statoClass(s){ if(!s)return'stato-vuoto'; const u=s.toUpperCase(); if(u==='SOPRALLUOGO NON FATTO')return'stato-sopralluogo'; if(u==='SOPRALLUOGO FATTO')return'stato-soprfatto'; if(u==='PREVENTIVO IN CORSO')return'stato-prevcorso'; if(u==='PREVENTIVO INVIATO')return'stato-preventivo'; if(u==='PREVENTIVO ACCETTATO')return'stato-accettato'; if(u==='NON PIU INTERESSATO')return'stato-nonpiu'; if(u==='PREVENTIVO NON FATTO')return'stato-prevno'; return'stato-vuoto'; }
+function statoShort(s){ const m={'SOPRALLUOGO NON FATTO':'Sopr. da fare','SOPRALLUOGO FATTO':'Sopr. fatto','PREVENTIVO IN CORSO':'Prev. in corso','PREVENTIVO INVIATO':'Prev. inviato','PREVENTIVO ACCETTATO':'Accettato ✓','NON PIU INTERESSATO':'Non interess.','PREVENTIVO NON FATTO':'Prev. non fatto'}; return m[s]||s||'—'; }
 function appDateClass(d){ if(!d)return''; const t=new Date();t.setHours(0,0,0,0); const dd=new Date(d);dd.setHours(0,0,0,0); if(dd<t)return'app-passato'; if(dd.getTime()===t.getTime())return'app-oggi'; return'app-futuro'; }
 function evOk(r){ return !!r.evolexOk; }
 function gpOk(r){ return !!(r.gestoprevNum && r.gestoprevNum.trim()); }
@@ -564,7 +612,7 @@ function updateOggiBanner(){
   const nc=document.getElementById('notif-count'); nc.style.display=oggi.length?'':'none'; nc.textContent=oggi.length;
 }
 
-const KCOLS=[{k:'SOPRALLUOGO NON FATTO',l:'Sopralluogo',c:'var(--warn)'},{k:'PREVENTIVO INVIATO',l:'Preventivo',c:'var(--accent)'},{k:'PREVENTIVO ACCETTATO',l:'Accettato',c:'var(--accent2)'},{k:'NON PIU INTERESSATO',l:'Non interess.',c:'var(--danger)'},{k:'__x',l:'Altro/vuoto',c:'var(--text3)'}];
+const KCOLS=[{k:'SOPRALLUOGO NON FATTO',l:'Sopr. da fare',c:'#d97706'},{k:'SOPRALLUOGO FATTO',l:'Sopr. fatto',c:'#b45309'},{k:'PREVENTIVO IN CORSO',l:'Prev. in corso',c:'#4f46e5'},{k:'PREVENTIVO INVIATO',l:'Prev. inviato',c:'#2563eb'},{k:'PREVENTIVO ACCETTATO',l:'Accettato',c:'#16a34a'},{k:'NON PIU INTERESSATO',l:'Non interess.',c:'#dc2626'},{k:'PREVENTIVO NON FATTO',l:'Prev. non fatto',c:'#9333ea'},{k:'__x',l:'Da lavorare',c:'#9ca3af'}];
 function renderKanban(){
   const data=getGest(); const wrap=document.getElementById('view-kanban');
   wrap.style.display='flex';
@@ -667,11 +715,83 @@ function switchPage(p){
   currentPage=p;
   document.getElementById('page-lead').classList.toggle('active',p==='lead');
   document.getElementById('page-gest').classList.toggle('active',p==='gest');
+  document.getElementById('page-cal').classList.toggle('active',p==='cal');
   document.getElementById('tab-lead').classList.toggle('active',p==='lead');
   document.getElementById('tab-gest').classList.toggle('active',p==='gest');
+  document.getElementById('tab-cal').classList.toggle('active',p==='cal');
   document.getElementById('sidebar').classList.toggle('hidden',p!=='gest');
+  if(p==='cal') renderCal();
 }
-function renderAll(){ renderLead(); renderGest(); }
+function renderAll(){ renderLead(); renderGest(); if(currentPage==='cal') renderCal(); }
+
+// ===== CALENDARIO =====
+let calView_ = 'mese';
+let calRef = new Date(); calRef.setHours(0,0,0,0);
+const TEC_COLORS = { 'Floran':'#2563eb','Magri':'#16a34a','Ponessa':'#d97706','Ruben':'#9333ea','Corrado':'#0891b2','Desandre':'#db2777' };
+const TEC_LIST = ['Floran','Magri','Ponessa','Ruben','Corrado','Desandre'];
+function tecColor(tec){ if(!tec) return '#9ca3af'; const p=tec.trim().split(/[\s\d\/\-,]/)[0]; const n=TEC_LIST.find(t=>t.toLowerCase()===p.toLowerCase()); return n?TEC_COLORS[n]:'#6b7280'; }
+function tecName(tec){ if(!tec) return '—'; const p=tec.trim().split(/[\s\d\/\-,]/)[0]; const n=TEC_LIST.find(t=>t.toLowerCase()===p.toLowerCase()); return n||tec; }
+function calView(v){
+  calView_=v;
+  document.getElementById('cvb-mese').style.cssText = v==='mese'?'background:var(--accent);border-color:var(--accent);color:#fff':'';
+  document.getElementById('cvb-sett').style.cssText = v==='sett'?'background:var(--accent);border-color:var(--accent);color:#fff':'';
+  renderCal();
+}
+function calPrev(){ if(calView_==='mese') calRef.setMonth(calRef.getMonth()-1); else calRef.setDate(calRef.getDate()-7); renderCal(); }
+function calNext(){ if(calView_==='mese') calRef.setMonth(calRef.getMonth()+1); else calRef.setDate(calRef.getDate()+7); renderCal(); }
+function calToday(){ calRef=new Date(); calRef.setHours(0,0,0,0); renderCal(); }
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function calEventi(){
+  const f=document.getElementById('cal-tec-filter').value;
+  return records.filter(r=>{ if(!r.appData)return false; if(f && tecName(r.tecnico)!==f)return false; return true; });
+}
+function updateCalLegend(){
+  const sel=document.getElementById('cal-tec-filter'); const cur=sel.value;
+  const present=[...new Set(records.filter(r=>r.appData&&r.tecnico).map(r=>tecName(r.tecnico)))].sort();
+  sel.innerHTML='<option value="">Tutti i tecnici</option>'+present.map(t=>`<option value="${t}">${t}</option>`).join('');
+  sel.value=cur;
+  document.getElementById('cal-legend').innerHTML = present.map(t=>`<span class="cal-ev-legend"><span class="cal-ev-dot" style="background:${tecColor(t)}"></span>${esc(t)}</span>`).join('') || '<span style="color:var(--text3)">Nessun appuntamento pianificato</span>';
+}
+function renderCal(){ updateCalLegend(); if(calView_==='mese') renderCalMese(); else renderCalSett(); }
+function renderCalMese(){
+  const y=calRef.getFullYear(), m=calRef.getMonth();
+  const mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  document.getElementById('cal-title').textContent=mesi[m]+' '+y;
+  const primo=new Date(y,m,1);
+  let start=new Date(primo); const dow=(primo.getDay()+6)%7; start.setDate(start.getDate()-dow);
+  const oggi=ymd(new Date()); const eventi=calEventi();
+  const dows=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  let html='<div class="cal-grid">'+dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<42;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i); const ds=ymd(d);
+    const inMonth=d.getMonth()===m;
+    const evs=eventi.filter(r=>r.appData===ds).sort((a,b)=>(a.appOra||'').localeCompare(b.appOra||''));
+    html+=`<div class="cal-cell ${inMonth?'':'other'} ${ds===oggi?'oggi':''}"><div class="cal-daynum">${d.getDate()}</div>${evs.map(r=>`<div class="cal-ev" style="background:${tecColor(r.tecnico)}" onclick="openGest('${r.id}')" title="${esc(cliente(r))} · ${esc(r.comune)} · ${esc(tecName(r.tecnico))}">${r.appOra?r.appOra+' ':''}${esc(cliente(r))}</div>`).join('')}</div>`;
+  }
+  html+='</div>';
+  document.getElementById('cal-body').innerHTML=html;
+}
+function renderCalSett(){
+  const y=calRef.getFullYear();
+  let start=new Date(calRef); const dow=(calRef.getDay()+6)%7; start.setDate(start.getDate()-dow);
+  const oggi=ymd(new Date()); const eventi=calEventi();
+  const giorni=[]; for(let i=0;i<7;i++){ const d=new Date(start); d.setDate(start.getDate()+i); giorni.push(d); }
+  const dows=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  document.getElementById('cal-title').textContent=giorni[0].getDate()+'/'+(giorni[0].getMonth()+1)+' – '+giorni[6].getDate()+'/'+(giorni[6].getMonth()+1)+' '+y;
+  let html='<div class="calw-grid"><div class="calw-head"></div>';
+  giorni.forEach((d,i)=>{ html+=`<div class="calw-head">${dows[i]}<small>${d.getDate()}/${d.getMonth()+1}</small></div>`; });
+  for(let h=7;h<=20;h++){
+    html+=`<div class="calw-hour">${String(h).padStart(2,'0')}:00</div>`;
+    giorni.forEach(d=>{
+      const ds=ymd(d);
+      const evs=eventi.filter(r=>{ if(r.appData!==ds)return false; const oh=r.appOra?parseInt(r.appOra.split(':')[0]):9; return oh===h; }).sort((a,b)=>(a.appOra||'').localeCompare(b.appOra||''));
+      html+=`<div class="calw-slot ${ds===oggi?'oggi':''}">${evs.map(r=>`<div class="cal-ev" style="background:${tecColor(r.tecnico)}" onclick="openGest('${r.id}')" title="${esc(cliente(r))} · ${esc(r.comune)}">${r.appOra||''} ${esc(cliente(r))}</div>`).join('')}</div>`;
+    });
+  }
+  html+='</div><div style="font-size:11px;color:var(--text3);margin-top:8px">Gli appuntamenti senza orario sono mostrati nella fascia delle 9:00.</div>';
+  document.getElementById('cal-body').innerHTML=html;
+}
+
 
 document.getElementById('btn-notif').addEventListener('click',richiediNotifiche);
 document.getElementById('sidebar-tecnici').addEventListener('click',(e)=>{ const it=e.target.closest('[data-tec]'); if(it)sbTec(it.getAttribute('data-tec')); });
