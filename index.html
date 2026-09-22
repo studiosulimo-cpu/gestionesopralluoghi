@@ -244,10 +244,18 @@
             <button class="btn" id="vb-kanban" onclick="switchView('kanban')">▦</button>
           </div>
         </div>
-        <div id="view-table" style="display:flex;flex:1;overflow:hidden">
+        <div id="view-table" style="display:flex;flex:1;overflow:hidden;flex-direction:column">
+          <div style="padding:6px 16px;display:flex;gap:16px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);background:var(--surface);align-items:center">
+            <span style="font-weight:600;color:var(--text3);text-transform:uppercase;font-size:10px;letter-spacing:.5px">Priorità:</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#dc2626;margin-right:4px"></span>Da smistare</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#d97706;margin-right:4px"></span>In carico, senza data</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;margin-right:4px"></span>Calendarizzato</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#9ca3af;margin-right:4px"></span>Chiuso</span>
+          </div>
           <div class="table-wrap">
             <table>
               <thead><tr>
+                <th onclick="sortGest('prio')" title="Priorità di lavorazione">●</th>
                 <th onclick="sortGest('presaCarico')">In carico</th>
                 <th onclick="sortGest('stato')">Stato</th>
                 <th onclick="sortGest('cliente')">Cliente</th>
@@ -391,6 +399,21 @@ function appDateClass(d){ if(!d)return''; const t=new Date();t.setHours(0,0,0,0)
 function evOk(r){ return !!r.evolexOk; }
 function gpOk(r){ return !!(r.gestoprevNum && r.gestoprevNum.trim()); }
 
+// Priorità/semaforo di lavorazione
+const STATI_CHIUSI = ['PREVENTIVO ACCETTATO','NON PIU INTERESSATO','PREVENTIVO NON FATTO'];
+function priorita(r){
+  if(r.stato && STATI_CHIUSI.includes(r.stato)) return 3;      // grigio - chiuso
+  if(r.appData) return 2;                                       // verde - calendarizzato
+  if(r.presaCarico) return 1;                                   // giallo - in carico senza data
+  return 0;                                                     // rosso - da smistare
+}
+function prioColor(p){ return ['#dc2626','#d97706','#16a34a','#9ca3af'][p]; }
+function prioLabel(p){ return ['Da smistare','In carico','Calendarizzato','Chiuso'][p]; }
+function giorniAttesa(r){
+  if(!r.created) return 0;
+  return Math.floor((Date.now()-new Date(r.created).getTime())/86400000);
+}
+
 async function load(){
   updateMeta('Connessione a Supabase…');
   try{
@@ -521,8 +544,17 @@ function getGest(){
     if(filters.gest==='gp-no' && gpOk(r)) return false;
     return true;
   }).sort((a,b)=>{
+    // ordinamento di default: per priorità di lavorazione (rossi in cima → grigi in fondo)
+    if(sortCol==='prio' || sortCol==='created'){
+      const pa=priorita(a), pb=priorita(b);
+      if(pa!==pb) return pa-pb;
+      // dentro lo stesso gruppo: più vecchi (in attesa da più tempo) in cima
+      const ca=a.created||'', cb=b.created||'';
+      return ca<cb ? -1 : ca>cb ? 1 : 0;
+    }
     let va=a[sortCol]||'', vb=b[sortCol]||'';
     if(sortCol==='cliente'){va=cliente(a);vb=cliente(b);}
+    if(sortCol==='presaCarico'){va=priorita(a);vb=priorita(b);}
     if(va<vb)return sortAsc?-1:1; if(va>vb)return sortAsc?1:-1; return 0;
   });
 }
@@ -534,7 +566,9 @@ function renderGest(){
   if(data.length===0){ tb.innerHTML=''; empty.style.display='flex'; }
   else{
     empty.style.display='none';
-    tb.innerHTML=data.map(r=>`<tr class="${r.id===selectedId?'selected':''}">
+    tb.innerHTML=data.map(r=>{ const p=priorita(r); const gg=giorniAttesa(r); const alert=(p===0&&gg>=3);
+      return `<tr class="${r.id===selectedId?'selected':''}">
+      <td style="text-align:center"><span title="${prioLabel(p)}${p===0&&gg>0?' · da '+gg+'gg':''}" style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${prioColor(p)};${alert?'box-shadow:0 0 0 3px rgba(220,38,38,.25)':''}"></span></td>
       <td style="text-align:center"><input type="checkbox" class="chk-carico" ${r.presaCarico?'checked':''} onchange="toggleCarico('${r.id}',this.checked)"></td>
       <td><span class="stato ${statoClass(r.stato)}">${statoShort(r.stato)}</span></td>
       <td style="font-weight:500;cursor:pointer" onclick="openGest('${r.id}')">${esc(cliente(r))}</td>
@@ -546,7 +580,7 @@ function renderGest(){
       <td><span class="gest-badge ${evOk(r)?'gest-ev-si':'gest-ev-no'}">${evOk(r)?'EV ✓':'EV —'}</span> ${gpOk(r)?`<span class="sol" title="GestoPrev">${esc(r.gestoprevNum)}</span>`:'<span style="color:var(--text3)">GP —</span>'}</td>
       <td><span class="cell-clip" style="max-width:160px;display:inline-block" title="${esc(r.feedback)}">${esc(r.feedback)||'—'}</span></td>
       <td><button class="row-act-btn" onclick="openGest('${r.id}')">✏️ Apri</button></td>
-    </tr>`).join('');
+    </tr>`; }).join('');
   }
   document.getElementById('cnt-gest').textContent=records.length;
   updateStats(); updateSidebar(); updateOggiBanner();
