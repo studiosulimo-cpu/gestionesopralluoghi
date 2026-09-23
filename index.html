@@ -125,6 +125,14 @@
   .row-act-btn:hover { border-color: var(--accent); color: var(--accent); }
   @media(max-width:800px){ .sidebar{display:none} .form-grid{grid-template-columns:1fr} .stats-bar{display:none} }
 
+  /* BARRA FASI */
+  .fase-bar { display:flex; gap:8px; padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto; }
+  .fase-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .fase-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .fase-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .fase-cnt { font-size:11px; background:rgba(0,0,0,.12); border-radius:10px; padding:1px 7px; font-weight:700; }
+  .fase-btn.active .fase-cnt { background:rgba(255,255,255,.25); }
+
   /* CALENDARIO */
   .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
   .cal-dow { background: var(--surface); padding: 7px; text-align: center; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); }
@@ -219,6 +227,13 @@
           <div class="stat-card s3"><div class="stat-n" id="st3">0</div><div class="stat-label">Accettati</div></div>
           <div class="stat-card s4"><div class="stat-n" id="st4">0</div><div class="stat-label">Non interessati</div></div>
           <div class="stat-card s5"><div class="stat-n" id="st5">0</div><div class="stat-label">Totale pratiche</div></div>
+        </div>
+        <div class="fase-bar" id="fase-bar">
+          <button class="fase-btn active" id="fb-" onclick="setFase('')">📋 Tutte <span class="fase-cnt" id="fc-">0</span></button>
+          <button class="fase-btn" id="fb-organizza" onclick="setFase('organizza')">📞 Da organizzare <span class="fase-cnt" id="fc-organizza">0</span></button>
+          <button class="fase-btn" id="fb-sopralluogo" onclick="setFase('sopralluogo')">🔧 Sopralluoghi <span class="fase-cnt" id="fc-sopralluogo">0</span></button>
+          <button class="fase-btn" id="fb-preventivo" onclick="setFase('preventivo')">📄 Preventivi <span class="fase-cnt" id="fc-preventivo">0</span></button>
+          <button class="fase-btn" id="fb-chiusa" onclick="setFase('chiusa')">✅ Chiuse <span class="fase-cnt" id="fc-chiusa">0</span></button>
         </div>
         <div class="toolbar">
           <div class="search-box"><span class="sicon">🔍</span><input type="text" id="search-gest" placeholder="Cerca cliente, comune, feedback…" oninput="filters.search=this.value.toLowerCase().trim();renderGest()"></div>
@@ -355,7 +370,7 @@ let records = [];
 let selectedId = null, editingId = null;
 let currentPage = 'lead', currentView = 'table';
 let sortCol = 'created', sortAsc = false;
-const filters = { search:'', stato:'', sol:'', tec:'', carico:'', gest:'' };
+const filters = { search:'', stato:'', sol:'', tec:'', carico:'', gest:'', fase:'' };
 
 function toDb(r) {
   return {
@@ -401,6 +416,16 @@ function gpOk(r){ return !!(r.gestoprevNum && r.gestoprevNum.trim()); }
 
 // Priorità/semaforo di lavorazione
 const STATI_CHIUSI = ['PREVENTIVO ACCETTATO','NON PIU INTERESSATO','PREVENTIVO NON FATTO'];
+// Fase del flusso di lavoro (per le viste per ruolo)
+// 'organizza' = da pianificare | 'sopralluogo' = in agenda tecnici | 'preventivo' = da elaborare | 'chiusa'
+function fase(r){
+  if(r.stato && STATI_CHIUSI.includes(r.stato)) return 'chiusa';
+  const s=(r.stato||'').toUpperCase();
+  if(s==='SOPRALLUOGO FATTO' || s==='PREVENTIVO IN CORSO' || s==='PREVENTIVO INVIATO') return 'preventivo';
+  // stato sopralluogo non fatto (o vuoto): dipende dalla data
+  if(r.appData) return 'sopralluogo';        // ha data → in agenda
+  return 'organizza';                         // senza data → da pianificare
+}
 function priorita(r){
   if(r.stato && STATI_CHIUSI.includes(r.stato)) return 3;      // grigio - chiuso
   if(r.appData) return 2;                                       // verde - calendarizzato
@@ -542,6 +567,7 @@ function getGest(){
     if(filters.gest==='ev-no' && evOk(r)) return false;
     if(filters.gest==='gp-si' && !gpOk(r)) return false;
     if(filters.gest==='gp-no' && gpOk(r)) return false;
+    if(filters.fase && fase(r)!==filters.fase) return false;
     return true;
   }).sort((a,b)=>{
     // ordinamento di default: per priorità di lavorazione (rossi in cima → grigi in fondo)
@@ -593,6 +619,12 @@ function updateStats(){
   document.getElementById('st3').textContent=records.filter(r=>r.stato?.includes('ACCETTATO')).length;
   document.getElementById('st4').textContent=records.filter(r=>r.stato==='NON PIU INTERESSATO').length;
   document.getElementById('st5').textContent=records.length;
+  // contatori fasi
+  document.getElementById('fc-').textContent=records.length;
+  document.getElementById('fc-organizza').textContent=records.filter(r=>fase(r)==='organizza').length;
+  document.getElementById('fc-sopralluogo').textContent=records.filter(r=>fase(r)==='sopralluogo').length;
+  document.getElementById('fc-preventivo').textContent=records.filter(r=>fase(r)==='preventivo').length;
+  document.getElementById('fc-chiusa').textContent=records.filter(r=>fase(r)==='chiusa').length;
 }
 
 function updateSidebar(){
@@ -628,12 +660,20 @@ function updateSidebar(){
   }).join('');
 }
 
+function setFase(f){
+  filters.fase = (filters.fase===f) ? '' : f;
+  ['','organizza','sopralluogo','preventivo','chiusa'].forEach(k=>{
+    const el=document.getElementById('fb-'+k); if(el)el.classList.toggle('active',filters.fase===k);
+  });
+  renderGest();
+}
 function sbStato(v){ filters.stato=(filters.stato===v)?'':v; document.getElementById('f-stato').value=filters.stato; renderGest(); }
 function sbFlag(key,v){ filters[key]=(filters[key]===v)?'':v; renderGest(); }
 function sbTec(v){ const t=document.createElement('textarea');t.innerHTML=v; const c=t.value; filters.tec=(filters.tec===c)?'':c; document.getElementById('f-tec').value=filters.tec; renderGest(); }
 function resetFiltri(){
-  filters.search='';filters.stato='';filters.sol='';filters.tec='';filters.carico='';filters.gest='';
+  filters.search='';filters.stato='';filters.sol='';filters.tec='';filters.carico='';filters.gest='';filters.fase='';
   document.getElementById('search-gest').value=''; document.getElementById('f-stato').value=''; document.getElementById('f-sol').value=''; document.getElementById('f-tec').value='';
+  ['','organizza','sopralluogo','preventivo','chiusa'].forEach(k=>{const el=document.getElementById('fb-'+k); if(el)el.classList.toggle('active',k==='');});
   renderGest();
 }
 
