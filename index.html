@@ -125,6 +125,16 @@
   .row-act-btn:hover { border-color: var(--accent); color: var(--accent); }
   @media(max-width:800px){ .sidebar{display:none} .form-grid{grid-template-columns:1fr} .stats-bar{display:none} }
 
+  /* STAMPA — solo il report */
+  @media print {
+    body { height:auto; overflow:visible; }
+    .topbar, .sidebar, .toolbar, .fase-bar, .stats-bar, .rep-noprint, .oggi-banner { display:none !important; }
+    .app, .main, .content, .page, #page-report, #rep-content { display:block !important; overflow:visible !important; height:auto !important; }
+    #rep-lock { display:none !important; }
+    #rep-content { max-width:100% !important; padding:0 !important; }
+    .page:not(#page-report) { display:none !important; }
+  }
+
   /* BARRA FASI */
   .fase-bar { display:flex; gap:8px; padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto; }
   .fase-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s; }
@@ -318,20 +328,29 @@
 
       <!-- PAGINA 4: REPORT -->
       <div class="page" id="page-report">
-        <div style="flex:1;overflow:auto;padding:24px;max-width:1100px;margin:0 auto;width:100%">
-          <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Report conversione</h2>
+        <div id="rep-lock" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px">
+          <div style="font-size:40px">🔒</div>
+          <div style="font-size:15px;font-weight:600">Report riservato</div>
+          <div style="color:var(--text3);font-size:12.5px">Inserisci la password per accedere</div>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="rep-pwd" placeholder="Password" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sbloccaReport()">
+            <button class="btn primary" onclick="sbloccaReport()">Accedi</button>
+          </div>
+        </div>
+        <div id="rep-content" style="display:none;flex:1;overflow:auto;padding:24px;max-width:1100px;margin:0 auto;width:100%">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <h2 style="font-size:18px;font-weight:700">Report conversione</h2>
+            <div style="display:flex;gap:8px" class="rep-noprint">
+              <button class="btn" onclick="window.print()">🖨️ Stampa / PDF</button>
+              <button class="btn" onclick="bloccaReport()">🔒 Blocca</button>
+            </div>
+          </div>
           <p style="color:var(--text3);font-size:12.5px;margin-bottom:20px">Analisi su tutto lo storico delle pratiche · dal primo contatto al preventivo accettato</p>
-
-          <!-- KPI principali -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px" id="rep-kpi"></div>
-
-          <!-- Funnel -->
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px">
             <h3 style="font-size:14px;font-weight:700;margin-bottom:16px">Funnel di conversione</h3>
             <div id="rep-funnel"></div>
           </div>
-
-          <!-- Due colonne: per soluzione + per tecnico -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="rep-cols">
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
               <h3 style="font-size:14px;font-weight:700;margin-bottom:14px">Per soluzione richiesta</h3>
@@ -376,8 +395,9 @@
             <option>PREVENTIVO RIFIUTATO</option>
           </select>
         </div>
-        <div class="field"><label>Tecnico</label><input type="text" id="m-tecnico" placeholder="Es. Floran, Magri"></div>
-        <div class="field"><label>Data appuntamento</label><input type="date" id="m-appdata"></div>
+        <div class="field"><label>Tecnico</label><input type="text" id="m-tecnico" placeholder="Es. Floran, Magri" oninput="renderConflittiLive()"></div>
+        <div class="field"><label>Data appuntamento</label><input type="date" id="m-appdata" oninput="renderConflittiLive()"></div>
+        <div class="field full" id="m-conflitti" style="display:none"></div>
         <div class="field"><label>Ora appuntamento</label><input type="time" id="m-appora" step="900"></div>
         <div class="field">
           <label>Evolex</label>
@@ -386,6 +406,9 @@
           </label>
         </div>
         <div class="field"><label>GestoPrev (n°)</label><input type="text" id="m-gp" placeholder="Es. 1373-1375"></div>
+        <hr class="field-sep">
+        <div class="field"><label>Preventivo — inizio elaborazione</label><input type="date" id="m-prev-inizio"></div>
+        <div class="field"><label>Preventivo — data invio</label><input type="date" id="m-prev-invio"></div>
         <div class="field full"><label>Feedback</label><textarea id="m-feedback" placeholder="Esito chiamate, decisioni cliente…"></textarea></div>
       </div>
     </div>
@@ -450,6 +473,7 @@ function toDb(r) {
     messaggio: r.messaggio||null, privacy: r.privacy||null,
     presa_carico: !!r.presaCarico, stato: r.stato||null, tecnico: r.tecnico||null,
     app_data: r.appData||null, app_ora: r.appOra||null,
+    prev_data_inizio: r.prevDataInizio||null, prev_data_invio: r.prevDataInvio||null,
     evolex_ok: !!r.evolexOk, gestoprev_num: r.gestoprevNum||null, feedback: r.feedback||null,
   };
 }
@@ -462,6 +486,7 @@ function fromDb(d) {
     messaggio: d.messaggio||'', privacy: d.privacy||'',
     presaCarico: !!d.presa_carico, stato: d.stato||'', tecnico: d.tecnico||'',
     appData: d.app_data||'', appOra: d.app_ora||'',
+    prevDataInizio: d.prev_data_inizio||'', prevDataInvio: d.prev_data_invio||'',
     evolexOk: !!d.evolex_ok, gestoprevNum: d.gestoprev_num||'', feedback: d.feedback||'',
     created: d.created_at||'',
   };
@@ -479,7 +504,7 @@ function fmtDate(d){ if(!d) return ''; const p=d.split('-'); return p.length===3
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function statoClass(s){ if(!s)return'stato-vuoto'; const u=s.toUpperCase(); if(u==='SOPRALLUOGO DA ORGANIZZARE')return'stato-sopralluogo'; if(u==='SOPRALLUOGO ORGANIZZATO')return'stato-soprfatto'; if(u==='SOPRALLUOGO FATTO / PREVENTIVO IN CORSO')return'stato-prevcorso'; if(u==='PREVENTIVO INVIATO')return'stato-preventivo'; if(u==='PREVENTIVO ACCETTATO')return'stato-accettato'; if(u==='NON PIU INTERESSATO')return'stato-nonpiu'; if(u==='PREVENTIVO RIFIUTATO')return'stato-prevno'; return'stato-vuoto'; }
 function statoShort(s){ const m={'SOPRALLUOGO DA ORGANIZZARE':'Sopr. da organizzare','SOPRALLUOGO ORGANIZZATO':'Sopr. organizzato','SOPRALLUOGO FATTO / PREVENTIVO IN CORSO':'Sopr. fatto / Prev. corso','PREVENTIVO INVIATO':'Prev. inviato','PREVENTIVO ACCETTATO':'Accettato ✓','NON PIU INTERESSATO':'Non interess.','PREVENTIVO RIFIUTATO':'Prev. rifiutato'}; return m[s]||s||'—'; }
-function appDateClass(d){ if(!d)return''; const t=new Date();t.setHours(0,0,0,0); const dd=new Date(d);dd.setHours(0,0,0,0); if(dd<t)return'app-passato'; if(dd.getTime()===t.getTime())return'app-oggi'; return'app-futuro'; }
+function appDateClass(d, r){ if(!d)return''; if(r && STATI_CHIUSI.includes((r.stato||'').toUpperCase())) return ''; const t=new Date();t.setHours(0,0,0,0); const dd=new Date(d);dd.setHours(0,0,0,0); if(dd<t)return'app-passato'; if(dd.getTime()===t.getTime())return'app-oggi'; return'app-futuro'; }
 function evOk(r){ return !!r.evolexOk; }
 function gpOk(r){ return !!(r.gestoprevNum && r.gestoprevNum.trim()); }
 
@@ -702,7 +727,7 @@ function renderGest(){
       <td>${esc(r.telefono)||'—'}</td>
       <td><span class="sol">${esc(r.soluzione)||'—'}</span></td>
       <td style="color:var(--accent2);font-weight:600">${esc(r.tecnico)||'—'}</td>
-      <td>${r.appData?`<span class="${appDateClass(r.appData)}" style="font-weight:600">${fmtDate(r.appData)}${r.appOra?' h.'+r.appOra:''}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+      <td>${r.appData?`<span class="${appDateClass(r.appData,r)}" style="font-weight:600">${fmtDate(r.appData)}${r.appOra?' h.'+r.appOra:''}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
       <td><span class="gest-badge ${evOk(r)?'gest-ev-si':'gest-ev-no'}">${evOk(r)?'EV ✓':'EV —'}</span> ${gpOk(r)?`<span class="sol" title="GestoPrev">${esc(r.gestoprevNum)}</span>`:'<span style="color:var(--text3)">GP —</span>'}</td>
       <td><span class="cell-clip" style="max-width:160px;display:inline-block" title="${esc(r.feedback)}">${esc(r.feedback)||'—'}</span></td>
       <td><button class="row-act-btn" onclick="openGest('${r.id}')">✏️ Apri</button></td>
@@ -794,7 +819,7 @@ function renderKanban(){
     return `<div style="min-width:240px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;max-height:100%">
       <div style="padding:10px 12px;border-top:2px solid ${col.c};border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;display:flex;justify-content:space-between"><span style="color:${col.c}">${col.l}</span><span style="color:var(--text3)">${cards.length}</span></div>
       <div style="overflow-y:auto;flex:1;padding:8px;display:flex;flex-direction:column;gap:6px">
-        ${cards.length===0?'<div style="color:var(--text3);font-size:11px;padding:8px;text-align:center">Nessuna</div>':cards.map(r=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;cursor:pointer" onclick="openGest('${r.id}')"><div style="font-size:12.5px;font-weight:600;margin-bottom:3px">${esc(cliente(r))} ${r.presaCarico?'<span style="color:var(--accent2)">●</span>':''}</div><div style="font-size:11px;color:var(--text2)">${esc(r.comune)} · <span class="sol">${esc(r.soluzione)}</span></div>${r.appData?`<div class="${appDateClass(r.appData)}" style="font-size:11px;margin-top:5px">📅 ${fmtDate(r.appData)} ${r.appOra||''} <span style="color:var(--accent2)">${esc(r.tecnico)}</span></div>`:''}</div>`).join('')}
+        ${cards.length===0?'<div style="color:var(--text3);font-size:11px;padding:8px;text-align:center">Nessuna</div>':cards.map(r=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;cursor:pointer" onclick="openGest('${r.id}')"><div style="font-size:12.5px;font-weight:600;margin-bottom:3px">${esc(cliente(r))} ${r.presaCarico?'<span style="color:var(--accent2)">●</span>':''}</div><div style="font-size:11px;color:var(--text2)">${esc(r.comune)} · <span class="sol">${esc(r.soluzione)}</span></div>${r.appData?`<div class="${appDateClass(r.appData,r)}" style="font-size:11px;margin-top:5px">📅 ${fmtDate(r.appData)} ${r.appOra||''} <span style="color:var(--accent2)">${esc(r.tecnico)}</span></div>`:''}</div>`).join('')}
       </div></div>`;
   }).join('');
 }
@@ -836,9 +861,39 @@ function openGest(id){
   document.getElementById('m-appora').value=r.appOra||'';
   document.getElementById('m-ev').checked=!!r.evolexOk;
   document.getElementById('m-gp').value=r.gestoprevNum||'';
+  document.getElementById('m-prev-inizio').value=r.prevDataInizio||'';
+  document.getElementById('m-prev-invio').value=r.prevDataInvio||'';
   document.getElementById('m-feedback').value=r.feedback||'';
+  renderConflitti(r);
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
+// Avviso conflitti: mostra altri sopralluoghi/assenze dello stesso tecnico nella stessa data
+function renderConflitti(r){
+  const tec=document.getElementById('m-tecnico').value;
+  const data=document.getElementById('m-appdata').value;
+  const box=document.getElementById('m-conflitti');
+  if(!tec || !data){ box.style.display='none'; box.innerHTML=''; return; }
+  const nomi=tecTrovati(tec);
+  if(nomi.length===0){ box.style.display='none'; box.innerHTML=''; return; }
+  const avvisi=[];
+  nomi.forEach(nome=>{
+    // altri sopralluoghi stessa data stesso tecnico (escluso quello in modifica)
+    const altri=records.filter(x=> x.id!==(r?r.id:editingId) && x.appData===data && tecTrovati(x.tecnico).includes(nome));
+    // assenze del tecnico che coprono la data
+    const ass=eventi.filter(ev=> ev.tipo==='assenza' && ev.tecnico && tecTrovati(ev.tecnico).includes(nome) && data>=ev.data_inizio && data<=(ev.data_fine||ev.data_inizio));
+    if(altri.length>0) avvisi.push(`⚠️ <b>${esc(nome)}</b> ha già ${altri.length} sopralluogo/i il ${fmtDate(data)}: ${altri.map(a=>esc(cliente(a))).join(', ')}`);
+    ass.forEach(a=> avvisi.push(`🏖️ <b>${esc(nome)}</b> risulta assente il ${fmtDate(data)} (${esc(a.titolo||'assenza')})`));
+  });
+  if(avvisi.length===0){
+    box.style.display='block';
+    box.innerHTML=`<div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:8px 10px;font-size:12px;color:#15803d">✓ Nessun conflitto per questa data</div>`;
+  } else {
+    box.style.display='block';
+    box.innerHTML=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;font-size:12px;color:#92400e;line-height:1.6">${avvisi.join('<br>')}</div>`;
+  }
+}
+function renderConflittiLive(){ renderConflitti(records.find(x=>x.id===editingId)); }
+
 function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); editingId=null; }
 async function saveGest(){
   const r=records.find(x=>x.id===editingId); if(!r){closeModal();return;}
@@ -849,13 +904,15 @@ async function saveGest(){
   r.appOra=document.getElementById('m-appora').value;
   r.evolexOk=document.getElementById('m-ev').checked;
   r.gestoprevNum=document.getElementById('m-gp').value.trim();
+  r.prevDataInizio=document.getElementById('m-prev-inizio').value;
+  r.prevDataInvio=document.getElementById('m-prev-invio').value;
   r.feedback=document.getElementById('m-feedback').value;
   closeModal(); renderGest(); await sbUpsert(r);
   toast('Pratica aggiornata ✓','success');
 }
 
 function exportCSV(){
-  const cols=['nome','cognome','email','telefono','comune','cap','tipologia','superficie','impianto','soluzione','priorita','messaggio','privacy','presaCarico','stato','tecnico','appData','appOra','evolexOk','gestoprevNum','feedback'];
+  const cols=['nome','cognome','email','telefono','comune','cap','tipologia','superficie','impianto','soluzione','priorita','messaggio','privacy','presaCarico','stato','tecnico','appData','appOra','prevDataInizio','prevDataInvio','evolexOk','gestoprevNum','feedback'];
   const rows=records.map(r=>cols.map(c=>'"'+String(r[c]!==undefined?r[c]:'').replace(/"/g,'""')+'"').join(','));
   const csv=[cols.join(','),...rows].join('\n');
   const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv); a.download='cvase_lead_'+today()+'.csv'; a.click();
@@ -987,12 +1044,21 @@ function renderReport(){
   const nNonInt = records.filter(r=>s(r)==='NON PIU INTERESSATO').length;
   const pct=(n)=> tot? Math.round(n/tot*100):0;
 
+  // tempo medio sopralluogo → invio preventivo
+  const conEntrambe=records.filter(r=>r.appData && r.prevDataInvio);
+  let tempoMedio='—';
+  if(conEntrambe.length>0){
+    const giorni=conEntrambe.map(r=>{ const d1=new Date(r.appData), d2=new Date(r.prevDataInvio); return Math.round((d2-d1)/86400000); }).filter(g=>g>=0);
+    if(giorni.length>0) tempoMedio=Math.round(giorni.reduce((a,b)=>a+b,0)/giorni.length)+' gg';
+  }
+
   const kpi=[
     {n:tot, l:'Lead totali', c:'var(--text)'},
     {n:nSoprFatto, l:'Sopralluoghi fatti', c:'#b45309', sub:pct(nSoprFatto)+'% dei lead'},
     {n:nPrevInv, l:'Preventivi inviati', c:'var(--accent)', sub:pct(nPrevInv)+'% dei lead'},
     {n:nAcc, l:'Preventivi accettati', c:'var(--accent2)', sub:pct(nAcc)+'% dei lead'},
     {n:pct(nAcc)+'%', l:'Tasso conversione', c:'var(--accent2)', big:true},
+    {n:tempoMedio, l:'Tempo medio sopr.→invio', c:'var(--text2)'},
   ];
   document.getElementById('rep-kpi').innerHTML=kpi.map(k=>`
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -1050,6 +1116,26 @@ function renderReport(){
     </div>`).join('') : '<div style="color:var(--text3);font-size:12px">Nessun sopralluogo assegnato</div>';
 }
 
+let reportSbloccato=false;
+const REPORT_PWD='board2026';
+function sbloccaReport(){
+  const p=document.getElementById('rep-pwd').value;
+  if(p===REPORT_PWD){
+    reportSbloccato=true;
+    document.getElementById('rep-lock').style.display='none';
+    document.getElementById('rep-content').style.display='block';
+    document.getElementById('rep-pwd').value='';
+    renderReport();
+  } else {
+    toast('Password errata','error');
+  }
+}
+function bloccaReport(){
+  reportSbloccato=false;
+  document.getElementById('rep-lock').style.display='flex';
+  document.getElementById('rep-content').style.display='none';
+}
+
 function switchPage(p){
   currentPage=p;
   document.getElementById('page-lead').classList.toggle('active',p==='lead');
@@ -1062,9 +1148,9 @@ function switchPage(p){
   document.getElementById('tab-report').classList.toggle('active',p==='report');
   document.getElementById('sidebar').classList.toggle('hidden',p!=='gest');
   if(p==='cal') renderCal();
-  if(p==='report') renderReport();
+  if(p==='report' && reportSbloccato) renderReport();
 }
-function renderAll(){ renderLead(); renderGest(); if(currentPage==='cal') renderCal(); if(currentPage==='report') renderReport(); }
+function renderAll(){ renderLead(); renderGest(); if(currentPage==='cal') renderCal(); if(currentPage==='report' && reportSbloccato) renderReport(); }
 
 // ===== CALENDARIO =====
 let calView_ = 'mese';
