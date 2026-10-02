@@ -381,6 +381,10 @@
         <div class="field full"><label>Altri dati lead</label><div class="detail-note" id="m-altri">—</div></div>
         <hr class="field-sep">
         <div class="field full">
+          <label style="color:var(--accent)">📍 Indirizzo sopralluogo <span style="font-weight:400;text-transform:none;color:var(--text3)">(da compilare dopo la chiamata)</span></label>
+          <input type="text" id="m-indirizzo" placeholder="Es. Via Festaz 12, fraz. Arpuilles">
+        </div>
+        <div class="field full">
           <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;cursor:pointer">
             <input type="checkbox" id="m-carico" class="chk-carico"> Presa in carico
           </label>
@@ -470,7 +474,7 @@ function toDb(r) {
   return {
     id: r.id, chiave: r.chiave || null,
     nome: r.nome||null, cognome: r.cognome||null, email: r.email||null, telefono: r.telefono||null,
-    comune: r.comune||null, cap: r.cap||null, tipologia: r.tipologia||null, superficie: r.superficie||null,
+    comune: r.comune||null, cap: r.cap||null, indirizzo: r.indirizzo||null, tipologia: r.tipologia||null, superficie: r.superficie||null,
     impianto: r.impianto||null, soluzione: r.soluzione||null, priorita: r.priorita||null,
     messaggio: r.messaggio||null, privacy: r.privacy||null,
     presa_carico: !!r.presaCarico, stato: r.stato||null, tecnico: r.tecnico||null,
@@ -483,7 +487,7 @@ function fromDb(d) {
   return {
     id: d.id, chiave: d.chiave||'',
     nome: d.nome||'', cognome: d.cognome||'', email: d.email||'', telefono: d.telefono||'',
-    comune: d.comune||'', cap: d.cap||'', tipologia: d.tipologia||'', superficie: d.superficie||'',
+    comune: d.comune||'', cap: d.cap||'', indirizzo: d.indirizzo||'', tipologia: d.tipologia||'', superficie: d.superficie||'',
     impianto: d.impianto||'', soluzione: d.soluzione||'', priorita: d.priorita||'',
     messaggio: d.messaggio||'', privacy: d.privacy||'',
     presaCarico: !!d.presa_carico, stato: d.stato||'', tecnico: d.tecnico||'',
@@ -751,7 +755,7 @@ function renderGest(){
       <td style="text-align:center"><input type="checkbox" class="chk-carico" ${r.presaCarico?'checked':''} onchange="toggleCarico('${r.id}',this.checked)"></td>
       <td><span class="stato ${statoClass(r.stato)}">${statoShort(r.stato)}</span></td>
       <td style="font-weight:500;cursor:pointer" onclick="openGest('${r.id}')">${esc(cliente(r))}</td>
-      <td>${esc(r.comune)||'—'}</td>
+      <td>${esc(r.comune)||'—'}${r.indirizzo?`<br><span style="font-size:10.5px;color:var(--text3)">${esc(r.indirizzo)}</span>`:''}</td>
       <td>${esc(r.telefono)||'—'}</td>
       <td><span class="sol">${esc(r.soluzione)||'—'}</span></td>
       <td style="color:var(--accent2);font-weight:600">${esc(r.tecnico)||'—'}</td>
@@ -881,8 +885,8 @@ function renderZona(){
       <div style="padding:6px 0">
         ${lista.map(r=>`<div style="display:flex;align-items:center;gap:12px;padding:7px 16px;cursor:pointer;border-bottom:1px solid var(--surface2)" onclick="openGest('${r.id}')">
           <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${prioColor(priorita(r))};flex-shrink:0"></span>
-          <span style="font-weight:600;min-width:150px">${esc(cliente(r))}</span>
-          <span style="color:var(--text2);min-width:120px">${esc(r.comune)||'—'}</span>
+          <span style="font-weight:600;min-width:140px">${esc(cliente(r))}</span>
+          <span style="color:var(--text2);min-width:200px">${esc(r.comune)||'—'}${r.indirizzo?' · '+esc(r.indirizzo):' <span style=\'color:var(--danger);font-size:10.5px\'>(indirizzo mancante)</span>'}</span>
           <span class="sol">${esc(r.soluzione)||'—'}</span>
           <span style="color:var(--text3);font-size:11.5px;margin-left:auto">${esc(r.telefono)||''}</span>
           ${r.tecnico?`<span style="color:var(--accent2);font-weight:600;font-size:11.5px">${esc(r.tecnico)}</span>`:''}
@@ -915,7 +919,7 @@ function openGest(id){
   editingId=id; selectedId=id;
   document.getElementById('modal-title').textContent='Gestione: '+cliente(r);
   document.getElementById('m-cliente').textContent=cliente(r);
-  document.getElementById('m-comune').textContent=(r.comune||'—')+(r.cap?' ('+r.cap+')':'');
+  document.getElementById('m-comune').textContent=(r.comune||'—')+(r.cap?' ('+r.cap+')':'')+(r.indirizzo?' · '+r.indirizzo:'');
   document.getElementById('m-telefono').textContent=r.telefono||'—';
   document.getElementById('m-soluzione').textContent=r.soluzione||'—';
   const altri=[];
@@ -926,6 +930,7 @@ function openGest(id){
   if(r.email)altri.push('Email: '+r.email);
   if(r.messaggio)altri.push('Messaggio: '+r.messaggio);
   document.getElementById('m-altri').innerHTML=altri.length?altri.map(esc).join('<br>'):'—';
+  document.getElementById('m-indirizzo').value=r.indirizzo||'';
   document.getElementById('m-carico').checked=!!r.presaCarico;
   document.getElementById('m-stato').value=r.stato||'';
   document.getElementById('m-tecnico').value=r.tecnico||'';
@@ -969,6 +974,7 @@ function renderConflittiLive(){ renderConflitti(records.find(x=>x.id===editingId
 function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); editingId=null; }
 async function saveGest(){
   const r=records.find(x=>x.id===editingId); if(!r){closeModal();return;}
+  r.indirizzo=document.getElementById('m-indirizzo').value.trim();
   r.presaCarico=document.getElementById('m-carico').checked;
   r.stato=document.getElementById('m-stato').value;
   r.tecnico=document.getElementById('m-tecnico').value;
@@ -984,7 +990,7 @@ async function saveGest(){
 }
 
 function exportCSV(){
-  const cols=['nome','cognome','email','telefono','comune','cap','tipologia','superficie','impianto','soluzione','priorita','messaggio','privacy','presaCarico','stato','tecnico','appData','appOra','prevDataInizio','prevDataInvio','evolexOk','gestoprevNum','feedback'];
+  const cols=['nome','cognome','email','telefono','comune','cap','indirizzo','tipologia','superficie','impianto','soluzione','priorita','messaggio','privacy','presaCarico','stato','tecnico','appData','appOra','prevDataInizio','prevDataInvio','evolexOk','gestoprevNum','feedback'];
   const rows=records.map(r=>cols.map(c=>'"'+String(r[c]!==undefined?r[c]:'').replace(/"/g,'""')+'"').join(','));
   const csv=[cols.join(','),...rows].join('\n');
   const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv); a.download='cvase_lead_'+today()+'.csv'; a.click();
@@ -1281,7 +1287,7 @@ function renderCalMese(){
     const inMonth=d.getMonth()===m;
     const evs=soprEv.filter(r=>r.appData===ds).sort((a,b)=>(a.appOra||'').localeCompare(b.appOra||''));
     const evm=eventiPerData(ds).filter(ev=>!fTec || ev.tecnico===fTec || tecTrovati(ev.tecnico).includes(fTec));
-    html+=`<div class="cal-cell ${inMonth?'':'other'} ${ds===oggi?'oggi':''}"><div class="cal-daynum" style="cursor:pointer" title="Aggiungi evento" onclick="openEvento('${ds}')">${d.getDate()} +</div>${evs.map(r=>`<div class="cal-ev" style="${tecBg(r.tecnico)}" onclick="openGest('${r.id}')" title="${esc(cliente(r))} · ${esc(r.comune)} · ${esc(tecName(r.tecnico))}">${r.appOra?r.appOra+' ':''}${esc(cliente(r))}</div>`).join('')}${evm.map(ev=>evChip(ev)).join('')}</div>`;
+    html+=`<div class="cal-cell ${inMonth?'':'other'} ${ds===oggi?'oggi':''}"><div class="cal-daynum" style="cursor:pointer" title="Aggiungi evento" onclick="openEvento('${ds}')">${d.getDate()} +</div>${evs.map(r=>`<div class="cal-ev" style="${tecBg(r.tecnico)}" onclick="openGest('${r.id}')" title="${esc(cliente(r))} · ${esc(r.comune)}${r.indirizzo? ', '+esc(r.indirizzo):''} · ${esc(tecName(r.tecnico))}">${r.appOra?r.appOra+' ':''}${esc(cliente(r))}</div>`).join('')}${evm.map(ev=>evChip(ev)).join('')}</div>`;
   }
   html+='</div>';
   document.getElementById('cal-body').innerHTML=html;
