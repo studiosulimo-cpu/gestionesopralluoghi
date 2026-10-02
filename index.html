@@ -269,8 +269,9 @@
           <select id="f-tec" onchange="filters.tec=this.value; renderGest()"><option value="">Tutti i tecnici</option></select>
           <button class="btn" onclick="resetFiltri()">✕ Azzera filtri</button>
           <div style="display:flex;gap:4px">
-            <button class="btn" id="vb-table" onclick="switchView('table')" style="background:var(--accent);border-color:var(--accent);color:#fff">☰</button>
-            <button class="btn" id="vb-kanban" onclick="switchView('kanban')">▦</button>
+            <button class="btn" id="vb-table" onclick="switchView('table')" style="background:var(--accent);border-color:var(--accent);color:#fff">☰ Tabella</button>
+            <button class="btn" id="vb-kanban" onclick="switchView('kanban')">▦ Kanban</button>
+            <button class="btn" id="vb-zona" onclick="switchView('zona')">📍 Zone</button>
           </div>
         </div>
         <div id="view-table" style="display:flex;flex:1;overflow:hidden;flex-direction:column">
@@ -303,6 +304,7 @@
           </div>
         </div>
         <div id="view-kanban" style="display:none;flex:1;overflow:auto;padding:12px;gap:12px"></div>
+        <div id="view-zona" style="display:none;flex:1;overflow:auto;padding:16px"></div>
       </div>
 
       <!-- PAGINA 3: CALENDARIO -->
@@ -507,6 +509,32 @@ function statoShort(s){ const m={'SOPRALLUOGO DA ORGANIZZARE':'Sopr. da organizz
 function appDateClass(d, r){ if(!d)return''; if(r && STATI_CHIUSI.includes((r.stato||'').toUpperCase())) return ''; const t=new Date();t.setHours(0,0,0,0); const dd=new Date(d);dd.setHours(0,0,0,0); if(dd<t)return'app-passato'; if(dd.getTime()===t.getTime())return'app-oggi'; return'app-futuro'; }
 function evOk(r){ return !!r.evolexOk; }
 function gpOk(r){ return !!(r.gestoprevNum && r.gestoprevNum.trim()); }
+
+// ===== ZONE GEOGRAFICHE (Valle d'Aosta) =====
+const ZONE = {
+  'Aosta e cintura': ['aosta','sarre','gressan','charvensod','pollein','quart','saint-christophe','jovençan','gignod','roisan'],
+  'Valdigne': ['courmayeur','pré-saint-didier','morgex','la salle','la thuile'],
+  'Media Valle / Grand-Paradis': ['aymavilles','villeneuve','introd','arvier','avise','saint-nicolas','saint-pierre','cogne','valsavarenche','rhêmes-saint-georges','rhêmes-notre-dame'],
+  'Valpelline e Gran San Bernardo': ['valpelline','ollomont','bionaz','oyace','doues','allein','étroubles','saint-oyen','saint-rhémy-en-bosses'],
+  'Media Valle Est / Cervino': ['nus','fénis','saint-marcel','chambave','verrayes','saint-denis','torgnon','antey-saint-andré','la magdeleine','chamois','valtournenche','châtillon','pontey','saint-vincent'],
+  'Val d\'Ayas e Val di Gressoney': ['montjovet','champdepraz','issogne','challand-saint-victor','challand-saint-anselme','brusson','ayas','verrès','arnad','issime','gaby','gressoney-saint-jean','gressoney-la-trinité','fontainemore','lillianes','perloz'],
+  'Bassa Valle': ['hône','bard','donnas','pont-saint-martin','champorcher','pontboset'],
+};
+// normalizza un comune per il confronto (minuscolo, accenti e trattini/spazi tollerati)
+function normComune(c){
+  return (c||'').toLowerCase().trim()
+    .replace(/['`]/g,'')
+    .replace(/[\s_]+/g,'-')
+    .replace(/é|è|ê/g,'e').replace(/à|â/g,'a').replace(/ì|î/g,'i').replace(/ò|ô/g,'o').replace(/ù|û/g,'u');
+}
+const ZONE_NORM = Object.fromEntries(Object.entries(ZONE).map(([z,arr])=>[z, arr.map(normComune)]));
+function zonaDi(comune){
+  const n = normComune(comune);
+  if(!n) return 'Da assegnare';
+  for(const [z,arr] of Object.entries(ZONE_NORM)){ if(arr.includes(n)) return z; }
+  return 'Da assegnare';
+}
+const ZONE_ORDINE = [...Object.keys(ZONE), 'Da assegnare'];
 
 // Priorità/semaforo di lavorazione
 const STATI_CHIUSI = ['PREVENTIVO ACCETTATO','NON PIU INTERESSATO','PREVENTIVO RIFIUTATO'];
@@ -736,6 +764,7 @@ function renderGest(){
   document.getElementById('cnt-gest').textContent=records.length;
   updateStats(); updateSidebar(); updateOggiBanner();
   if(currentView==='kanban') renderKanban();
+  if(currentView==='zona') renderZona();
 }
 
 function updateStats(){
@@ -823,14 +852,57 @@ function renderKanban(){
       </div></div>`;
   }).join('');
 }
+function renderZona(){
+  // raggruppa i sopralluoghi ancora da pianificare per zona
+  // includiamo: fase 'organizza' (da smistare/in carico senza data) e 'sopralluogo' senza data
+  const daPianificare = getGest().filter(r=>{
+    const f=fase(r);
+    return f==='organizza' || (f==='sopralluogo' && !r.appData);
+  });
+  const perZona = {};
+  ZONE_ORDINE.forEach(z=>perZona[z]=[]);
+  daPianificare.forEach(r=>{ const z=zonaDi(r.comune); (perZona[z]=perZona[z]||[]).push(r); });
+
+  const wrap=document.getElementById('view-zona');
+  const zoneConLead = ZONE_ORDINE.filter(z=>perZona[z] && perZona[z].length>0);
+  if(zoneConLead.length===0){
+    wrap.innerHTML='<div class="empty" style="height:40vh"><div class="eicon">📍</div><div>Nessun sopralluogo da pianificare</div><div style="font-size:11.5px">I sopralluoghi già calendarizzati non compaiono qui</div></div>';
+    return;
+  }
+  wrap.innerHTML = `<div style="margin-bottom:14px;font-size:12.5px;color:var(--text2)">Sopralluoghi <b>da pianificare</b> raggruppati per zona. Dove ci sono più richieste vicine, conviene un unico giro del tecnico.</div>` +
+  zoneConLead.map(z=>{
+    const lista=perZona[z].sort((a,b)=>(a.comune||'').localeCompare(b.comune||''));
+    const multiplo = lista.length>=2;
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:${multiplo?'#eff6ff':'var(--surface)'}">
+        <span style="font-weight:700;font-size:13.5px">📍 ${esc(z)}</span>
+        <span style="font-size:12px;font-weight:700;color:${multiplo?'var(--accent)':'var(--text3)'};background:${multiplo?'#dbeafe':'var(--surface2)'};border-radius:12px;padding:2px 10px">${lista.length} ${lista.length===1?'richiesta':'richieste'}${multiplo?' · giro unico':''}</span>
+      </div>
+      <div style="padding:6px 0">
+        ${lista.map(r=>`<div style="display:flex;align-items:center;gap:12px;padding:7px 16px;cursor:pointer;border-bottom:1px solid var(--surface2)" onclick="openGest('${r.id}')">
+          <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${prioColor(priorita(r))};flex-shrink:0"></span>
+          <span style="font-weight:600;min-width:150px">${esc(cliente(r))}</span>
+          <span style="color:var(--text2);min-width:120px">${esc(r.comune)||'—'}</span>
+          <span class="sol">${esc(r.soluzione)||'—'}</span>
+          <span style="color:var(--text3);font-size:11.5px;margin-left:auto">${esc(r.telefono)||''}</span>
+          ${r.tecnico?`<span style="color:var(--accent2);font-weight:600;font-size:11.5px">${esc(r.tecnico)}</span>`:''}
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function switchView(v){
   currentView=v;
   document.getElementById('view-table').style.display=v==='table'?'flex':'none';
   document.getElementById('view-kanban').style.display=v==='kanban'?'flex':'none';
+  document.getElementById('view-zona').style.display=v==='zona'?'block':'none';
   const a='background:var(--accent);border-color:var(--accent);color:#fff';
   document.getElementById('vb-table').style.cssText=v==='table'?a:'';
   document.getElementById('vb-kanban').style.cssText=v==='kanban'?a:'';
+  document.getElementById('vb-zona').style.cssText=v==='zona'?a:'';
   if(v==='kanban')renderKanban();
+  if(v==='zona')renderZona();
 }
 
 async function toggleCarico(id,val){
