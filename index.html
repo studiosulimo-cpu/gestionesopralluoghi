@@ -139,22 +139,23 @@
     body.print-scheda > *:not(#scheda-print) { display:none !important; }
     body.print-scheda #scheda-print { display:block !important; }
   }
-  /* SCHEDA SOPRALLUOGO — stile */
-  .sch { font-family: Arial, sans-serif; color:#000; font-size:11px; line-height:1.5; }
-  .sch h1 { font-size:15px; text-align:center; margin-bottom:2px; }
-  .sch .sch-sub { text-align:center; font-size:10px; font-weight:bold; margin-bottom:10px; }
-  .sch h2 { font-size:12px; background:#eee; padding:3px 6px; margin:12px 0 6px; border-left:3px solid #000; }
-  .sch .pre { background:#f0f7ff; border:1px solid #9cc; border-radius:4px; padding:8px 10px; margin-bottom:10px; }
-  .sch .pre .riga { margin-bottom:3px; }
-  .sch .pre b { display:inline-block; min-width:130px; }
-  .sch .ln { border-bottom:1px dotted #333; display:inline-block; min-width:60px; }
-  .sch .lnf { border-bottom:1px dotted #333; display:block; height:16px; margin:3px 0; }
-  .sch .ck { display:inline-block; width:11px; height:11px; border:1.3px solid #000; vertical-align:middle; margin:0 3px 0 8px; }
-  .sch .row { margin:4px 0; }
-  .sch .note-box { border:1px solid #333; min-height:70px; margin-top:4px; }
-  .sch .foto { font-style:italic; color:#333; margin:2px 0 2px 10px; }
-  .sch .foto::before { content:"📷 "; }
-  @page { size: A4; margin: 12mm; }
+  /* SCHEDA SOPRALLUOGO — fedele al modulo originale */
+  .sch { font-family: Arial, Helvetica, sans-serif; color:#000; font-size:12px; line-height:1.6; }
+  .sch h1 { font-size:15px; text-align:center; font-weight:bold; margin-bottom:12px; }
+  .sch .sub { font-weight:bold; margin-bottom:12px; }
+  .sch .sec { font-weight:bold; margin:20px 0 8px; }
+  .sch .lbl { margin-top:12px; }
+  .sch .u { border-bottom:1px solid #000; min-height:19px; padding:1px 2px; }
+  .sch .u.val { font-weight:bold; }
+  .sch .opt { display:inline-block; border:1px solid #000; padding:3px 11px; margin:3px 10px 3px 0; white-space:nowrap; }
+  .sch .sub-item { margin:6px 0 6px 26px; }
+  .sch .dash { margin:6px 0 6px 26px; display:flex; gap:8px; }
+  .sch .dash::before { content:"–"; }
+  .sch .box { border:1px solid #000; min-height:160px; margin-top:6px; }
+  .sch .foto { margin:3px 0; }
+  .sch .inline-u { border-bottom:1px solid #000; display:inline-block; min-width:70px; padding:0 4px; }
+  .sch .pagebreak { page-break-before: always; }
+  @page { size: A4; margin: 14mm; }
 
   /* BARRA FASI */
   .fase-bar { display:flex; gap:8px; padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto; }
@@ -1014,89 +1015,96 @@ async function saveGest(){
   toast('Pratica aggiornata ✓','success');
 }
 
-// ===== SCHEDA SOPRALLUOGO STAMPABILE =====
+// ===== SCHEDA SOPRALLUOGO STAMPABILE (fedele al modulo) =====
 function stampaScheda(){
   const r=records.find(x=>x.id===editingId);
   if(!r){ toast('Apri prima una pratica','warn'); return; }
-  const ck=(l)=>`<span class="ck"></span>${l}`;
-  const L=(min)=>`<span class="ln" style="min-width:${min||80}px">&nbsp;</span>`;
-  // desiderata: unisce soluzione, priorità, messaggio del lead
+  const O=(l)=>`<span class="opt">${l}</span>`;                    // opzione = rettangolo con testo dentro
+  const U=(val)=>`<div class="u${val?' val':''}">${val?esc(val):''}</div>`; // riga di scrittura (piena se valorizzata)
   const des=[]; if(r.soluzione)des.push(r.soluzione); if(r.priorita)des.push('Priorità: '+r.priorita); if(r.messaggio)des.push(r.messaggio);
   const indir=[r.indirizzo, r.comune, r.cap].filter(Boolean).join(', ');
+  const ctx=[]; if(r.telefono)ctx.push('Tel. '+r.telefono); if(r.appData)ctx.push('Appuntamento '+fmtDate(r.appData)+(r.appOra?' h. '+r.appOra:'')); if(r.tecnico)ctx.push('Tecnico: '+r.tecnico);
+
   const html=`<div class="sch">
     <h1>SCHEDA SOPRALLUOGO — CVA Smart Energy</h1>
-    <div class="sch-sub">Da compilare con il cliente prima e durante il sopralluogo</div>
+    <div class="sub">Da compilare con il cliente prima di effettuare il sopralluogo:</div>
 
-    <div class="pre">
-      <div class="riga"><b>Nome pratica:</b> ${esc(cliente(r))}</div>
-      <div class="riga"><b>Indirizzo:</b> ${esc(indir)||'—'}</div>
-      <div class="riga"><b>Telefono:</b> ${esc(r.telefono)||'—'}</div>
-      <div class="riga"><b>Appuntamento:</b> ${r.appData?fmtDate(r.appData):'—'}${r.appOra?' h. '+r.appOra:''} &nbsp;&nbsp; <b style="min-width:60px">Tecnico:</b> ${esc(r.tecnico)||'—'}</div>
-      <div class="riga"><b>Soluzione/desiderata:</b> ${esc(des.join(' · '))||'—'}</div>
-      <div class="riga"><b>Tipologia / superficie:</b> ${esc(r.tipologia)||'—'}${r.superficie?' · '+esc(r.superficie):''}</div>
-      <div class="riga"><b>Impianto attuale:</b> ${esc(r.impianto)||'—'}</div>
-    </div>
+    <div class="lbl">Nome pratica:</div>${U(cliente(r))}
+    <div class="lbl">Indirizzo:</div>${U(indir)}
+    ${ctx.length?`<div class="lbl">Riferimenti:</div>${U(ctx.join('   ·   '))}`:''}
+    <div class="lbl">Anno stimato realizzazione edificio:</div>${U()}
 
-    <h2>Dati edificio</h2>
-    <div class="row">Anno stimato realizzazione edificio: ${L(120)}</div>
-    <div class="row">L'analisi riguarda: ${ck('Casa monofamiliare')} ${ck('UI in casa plurifam./condominio a torre')}<br>
-      <span style="margin-left:120px">${ck('Intero edificio')} ${ck('UI in edificio multipiano in linea')}</span></div>
-    <div class="row">Cliente proprietario dell'immobile/UI: ${ck('Sì')} ${ck('No')}</div>
-    <div class="row">Desiderata cliente (integrazioni):</div>
-    <div class="lnf"></div><div class="lnf"></div>
+    <div class="lbl">L'analisi riguarda:&nbsp; ${O('Casa monofamiliare')} ${O('UI in casa plurifamiliare/condominio a torre')}</div>
+    <div style="margin:3px 0 3px 120px">${O('Intero edificio')} ${O('UI in edificio multipiano in linea')}</div>
 
-    <h2>Involucro</h2>
-    <div class="row"><b>Pareti</b> — Isolamento: ${ck('Buono')} ${ck('Poco')} ${ck('Non presente')}<br>
-      <span style="margin-left:60px">Confine: ${ck('Esterno')} ${ck('Non riscaldato')} ${ck('Riscaldato')} ${ck('Terreno')}</span></div>
-    <div class="row"><b>Soffitto/tetto</b> — Isolamento: ${ck('Buono')} ${ck('Poco')} ${ck('Non presente')}<br>
-      <span style="margin-left:60px">Confine: ${ck('Esterno')} ${ck('Non riscaldato')} ${ck('Riscaldato')}</span></div>
-    <div class="row"><b>Pavimento</b> — Isolamento: ${ck('Buono')} ${ck('Poco')} ${ck('Non presente')}<br>
-      <span style="margin-left:60px">Confine: ${ck('Non riscaldato')} ${ck('Riscaldato')} ${ck('Terreno')}</span></div>
-    <div class="row">Serramenti installati nel: ${L(100)} &nbsp; Superficie netta: ${L(90)} &nbsp; Volume riscaldato: ${L(90)}</div>
+    <div class="lbl">Cliente proprietario dell'immobile/UI:&nbsp; ${O('Sì')} ${O('No')}</div>
 
-    <h2>Impianti rinnovabili presenti</h2>
-    <div class="row">FV: ${L(70)} kWp — esposizione: ${L(120)}</div>
-    <div class="row">Solare: ${L(70)} pannelli — esposizione: ${L(120)}</div>
+    <div class="lbl">Desiderata cliente:</div>${U(des.join('  ·  '))}${U()}${U()}
 
-    <h2>Spese annuali</h2>
-    <div class="row">Vettore: ${L(120)} Spesa annua: ${L(70)} €</div>
-    <div class="row">Vettore: ${L(120)} Spesa annua: ${L(70)} €</div>
-    <div class="row">Vettore: ${L(120)} Spesa annua: ${L(70)} €</div>
+    <div class="sec">Pareti:</div>
+    <div class="dash"><span>Isolamento:&nbsp; ${O('Buono')} ${O('Poco')} ${O('Non presente')}</span></div>
+    <div class="dash"><span>Confine:&nbsp; ${O('Esterno')} ${O('Non riscaldato')} ${O('Riscaldato')} ${O('Terreno')}</span></div>
 
-    <h2>Sopralluogo per cambio generatore</h2>
+    <div class="sec">Soffitto/tetto:</div>
+    <div class="dash"><span>Isolamento:&nbsp; ${O('Buono')} ${O('Poco')} ${O('Non presente')}</span></div>
+    <div class="dash"><span>Confine:&nbsp; ${O('Esterno')} ${O('Non riscaldato')} ${O('Riscaldato')}</span></div>
+
+    <div class="sec">Pavimento:</div>
+    <div class="dash"><span>Isolamento:&nbsp; ${O('Buono')} ${O('Poco')} ${O('Non presente')}</span></div>
+    <div class="dash"><span>Confine:&nbsp; ${O('Non riscaldato')} ${O('Riscaldato')} ${O('Terreno')}</span></div>
+
+    <div class="lbl">Serramenti installati nel:</div>${U()}
+    <div class="lbl">Superficie netta:</div>${U(r.superficie||'')}
+    <div class="lbl">Volume riscaldato:</div>${U()}
+
+    <div class="sec" style="font-weight:normal">Impianti rinnovabili presenti:</div>
+    <div class="dash"><span>FV: <span class="inline-u" style="min-width:120px">&nbsp;</span> kWp, esposizione <span class="inline-u" style="min-width:160px">&nbsp;</span></span></div>
+    <div class="dash"><span>Solare: <span class="inline-u" style="min-width:120px">&nbsp;</span> pannelli, esposizione <span class="inline-u" style="min-width:160px">&nbsp;</span></span></div>
+
+    <div class="sec" style="font-weight:normal">Spese annuali:</div>
+    <div class="dash"><span>Vettore: <span class="inline-u" style="min-width:170px">&nbsp;</span> Spesa annua: <span class="inline-u" style="min-width:110px">&nbsp;</span> €</span></div>
+    <div class="dash"><span>Vettore: <span class="inline-u" style="min-width:170px">&nbsp;</span> Spesa annua: <span class="inline-u" style="min-width:110px">&nbsp;</span> €</span></div>
+    <div class="dash"><span>Vettore: <span class="inline-u" style="min-width:170px">&nbsp;</span> Spesa annua: <span class="inline-u" style="min-width:110px">&nbsp;</span> €</span></div>
+
+    <div class="sec pagebreak">Sopralluogo per cambio generatore:</div>
     <div class="foto">Foto targhetta generatore esistente</div>
     <div class="foto">Foto CT (anche accumuli ed eventuale collettore di distribuzione)</div>
-    <div class="row">Tipologia, alimentazione e potenza: ${L(260)}</div>
-    <div class="row">Impianto: ${ck('Autonomo')} ${ck('Centralizzato più UI')} ${ck('Centralizzato più edifici')}</div>
-    <div class="row">Anno di installazione: ${L(100)} &nbsp; N° stacchi collettore: ${L(60)}</div>
-    <div class="row">Terminali di emissione: ${L(240)}</div>
-    <div class="row">Regolazione generatore: ${L(240)}</div>
-    <div class="row">Che generatore fa ACS? ${ck('Stesso')} ${ck('Altro:')} ${L(120)}</div>
-    <div class="row">Nuovo generatore ipotizzato: ${L(230)}</div>
-    <div class="row">Nuovo generatore per: ${ck('Caldo')} ${ck('ACS')} ${ck('Freddo')}</div>
-    <div class="row">Luogo di posizionamento elementi da installare: ${L(200)}</div>
-    <div class="foto">Foto zona di posizionamento eventuali unità esterne</div>
-    <div class="row">Altri elementi idraulici da sostituire: ${L(210)}</div>
-    <div class="row">Rifacimento regolazione: ${ck('Sì')} ${ck('No')}</div>
-    <div class="row">Bozza schema idraulico esistente:</div>
-    <div class="note-box"></div>
+    <div class="lbl" style="font-weight:bold">Dati generatore esistente:</div>
+    <div class="dash"><span>Tipologia, alimentazione e potenza:</span></div>${U()}
+    <div class="dash"><span>Impianto:&nbsp; ${O('Autonomo')} ${O('Centralizzato per più UI')} ${O('Centralizzato per più edifici')}</span></div>
+    <div class="dash"><span>Anno di installazione:</span></div>${U()}
+    <div class="dash"><span>Terminali di emissione:</span></div>${U()}
+    <div class="dash"><span>Regolazione generatore:</span></div>${U()}
+    <div class="dash"><span>Che generatore fa ACS?&nbsp; ${O('Stesso')} ${O('Altro:')} <span class="inline-u" style="min-width:180px">&nbsp;</span></span></div>
+    <div class="dash"><span>N° stacchi collettore:</span></div>${U()}
 
-    <h2>Sopralluogo FV</h2>
+    <div class="lbl">Nuovo generatore ipotizzato:</div>${U()}
+    <div class="lbl">Nuovo generatore per:&nbsp; ${O('Caldo')} ${O('ACS')} ${O('Freddo')}</div>
+    <div class="lbl">Luogo di posizionamento elementi da installare:</div>${U()}
+    <div class="foto">Foto zona di posizionamento eventuali unità esterne</div>
+    <div class="lbl">Altri elementi idraulici da sostituire:</div>${U()}
+    <div class="lbl">Rifacimento regolazione:&nbsp; ${O('Sì')} ${O('No')}</div>
+    <div class="lbl" style="text-align:center;font-weight:bold">Bozza schema idraulico esistente:</div>
+    <div class="box" style="min-height:220px"></div>
+
+    <div class="sec pagebreak">Sopralluogo FV:</div>
     <div class="foto">Foto edificio da esterno</div>
     <div class="foto">Foto tetto</div>
-    <div class="row"><b>Falda 1</b> — Quanti lucernai e/o camini: ${L(120)}</div>
-    <div class="row">Esposizione: ${L(140)}</div>
-    <div class="row">Tipologia di copertura: ${ck('lose')} ${ck('tegole')} ${ck('lamiera')} &nbsp; Base tetto: ${ck('legno')} ${ck('cemento')}</div>
+    <div class="lbl" style="font-weight:bold">Falda 1:</div>
+    <div class="dash"><span>Quanti lucernai e/o camini:</span></div>${U()}
+    <div class="dash"><span>Esposizione: <span class="inline-u" style="min-width:300px">&nbsp;</span></span></div>
+    <div class="dash"><span>Tipologia di copertura:&nbsp; ${O('lose')} ${O('tegole')} ${O('lamiera')}</span></div>
+    <div class="dash"><span>Base tetto:&nbsp; ${O('legno')} ${O('cemento')}</span></div>
     <div class="foto">Foto zona contatori e zona di posizionamento quadri ed inverter</div>
-    <div class="row">Posizione quadro DC: ${L(200)}</div>
-    <div class="row">Posizione inverter: ${L(210)}</div>
-    <div class="row">Posizione quadro AC: ${L(200)}</div>
-    <div class="row">Va rifatto il quadro generale? ${ck('Sì')} ${ck('No')} &nbsp; Quante utenze collegate: ${L(80)}</div>
-    <div class="row">Descrizione percorso e distanza da pannelli a inverter:</div>
-    <div class="lnf"></div><div class="lnf"></div>
+    <div class="lbl">Posizione quadro DC:</div>${U()}
+    <div class="lbl">Posizione inverter:</div>${U()}
+    <div class="lbl">Posizione quadro AC:</div>${U()}
+    <div class="lbl">Va rifatto il quadro generale?&nbsp; ${O('Sì')} ${O('No')}</div>
+    <div class="lbl">Quante utenze collegate? <span class="inline-u" style="min-width:120px">&nbsp;</span></div>
+    <div class="lbl">Descrizione percorso e distanza da pannelli a inverter:</div>${U()}${U()}
 
-    <h2>Note aggiuntive sopralluogo</h2>
-    <div class="note-box" style="min-height:110px"></div>
+    <div class="lbl" style="text-align:center;font-weight:bold;margin-top:16px">Note aggiuntive sopralluogo</div>
+    <div class="box" style="min-height:260px"></div>
   </div>`;
   document.getElementById('scheda-print').innerHTML=html;
   document.body.classList.add('print-scheda');
