@@ -126,14 +126,35 @@
   @media(max-width:800px){ .sidebar{display:none} .form-grid{grid-template-columns:1fr} .stats-bar{display:none} }
 
   /* STAMPA — solo il report */
+  #scheda-print { display:none; }
   @media print {
     body { height:auto; overflow:visible; }
-    .topbar, .sidebar, .toolbar, .fase-bar, .stats-bar, .rep-noprint, .oggi-banner { display:none !important; }
-    .app, .main, .content, .page, #page-report, #rep-content { display:block !important; overflow:visible !important; height:auto !important; }
-    #rep-lock { display:none !important; }
-    #rep-content { max-width:100% !important; padding:0 !important; }
-    .page:not(#page-report) { display:none !important; }
+    /* MODALITÀ REPORT (default) */
+    body:not(.print-scheda) .topbar, body:not(.print-scheda) .sidebar, body:not(.print-scheda) .toolbar, body:not(.print-scheda) .fase-bar, body:not(.print-scheda) .stats-bar, body:not(.print-scheda) .rep-noprint, body:not(.print-scheda) .oggi-banner { display:none !important; }
+    body:not(.print-scheda) .app, body:not(.print-scheda) .main, body:not(.print-scheda) .content, body:not(.print-scheda) .page, body:not(.print-scheda) #page-report, body:not(.print-scheda) #rep-content { display:block !important; overflow:visible !important; height:auto !important; }
+    body:not(.print-scheda) #rep-lock { display:none !important; }
+    body:not(.print-scheda) #rep-content { max-width:100% !important; padding:0 !important; }
+    body:not(.print-scheda) .page:not(#page-report) { display:none !important; }
+    /* MODALITÀ SCHEDA SOPRALLUOGO */
+    body.print-scheda > *:not(#scheda-print) { display:none !important; }
+    body.print-scheda #scheda-print { display:block !important; }
   }
+  /* SCHEDA SOPRALLUOGO — stile */
+  .sch { font-family: Arial, sans-serif; color:#000; font-size:11px; line-height:1.5; }
+  .sch h1 { font-size:15px; text-align:center; margin-bottom:2px; }
+  .sch .sch-sub { text-align:center; font-size:10px; font-weight:bold; margin-bottom:10px; }
+  .sch h2 { font-size:12px; background:#eee; padding:3px 6px; margin:12px 0 6px; border-left:3px solid #000; }
+  .sch .pre { background:#f0f7ff; border:1px solid #9cc; border-radius:4px; padding:8px 10px; margin-bottom:10px; }
+  .sch .pre .riga { margin-bottom:3px; }
+  .sch .pre b { display:inline-block; min-width:130px; }
+  .sch .ln { border-bottom:1px dotted #333; display:inline-block; min-width:60px; }
+  .sch .lnf { border-bottom:1px dotted #333; display:block; height:16px; margin:3px 0; }
+  .sch .ck { display:inline-block; width:11px; height:11px; border:1.3px solid #000; vertical-align:middle; margin:0 3px 0 8px; }
+  .sch .row { margin:4px 0; }
+  .sch .note-box { border:1px solid #333; min-height:70px; margin-top:4px; }
+  .sch .foto { font-style:italic; color:#333; margin:2px 0 2px 10px; }
+  .sch .foto::before { content:"📷 "; }
+  @page { size: A4; margin: 12mm; }
 
   /* BARRA FASI */
   .fase-bar { display:flex; gap:8px; padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto; }
@@ -419,6 +440,7 @@
       </div>
     </div>
     <div class="modal-footer">
+      <button class="btn" onclick="stampaScheda()" style="margin-right:auto">🖨️ Scheda sopralluogo</button>
       <button class="btn" onclick="closeModal()">Annulla</button>
       <button class="btn primary" onclick="saveGest()">💾 Salva</button>
     </div>
@@ -426,6 +448,9 @@
 </div>
 
 <div class="toast-container" id="toasts"></div>
+
+<!-- SCHEDA SOPRALLUOGO STAMPABILE -->
+<div id="scheda-print"></div>
 
 <!-- MODALE EVENTO / ASSENZA -->
 <div class="modal-overlay hidden" id="ev-overlay" onclick="if(event.target===this)closeEvento()">
@@ -987,6 +1012,98 @@ async function saveGest(){
   r.feedback=document.getElementById('m-feedback').value;
   closeModal(); renderGest(); await sbUpsert(r);
   toast('Pratica aggiornata ✓','success');
+}
+
+// ===== SCHEDA SOPRALLUOGO STAMPABILE =====
+function stampaScheda(){
+  const r=records.find(x=>x.id===editingId);
+  if(!r){ toast('Apri prima una pratica','warn'); return; }
+  const ck=(l)=>`<span class="ck"></span>${l}`;
+  const L=(min)=>`<span class="ln" style="min-width:${min||80}px">&nbsp;</span>`;
+  // desiderata: unisce soluzione, priorità, messaggio del lead
+  const des=[]; if(r.soluzione)des.push(r.soluzione); if(r.priorita)des.push('Priorità: '+r.priorita); if(r.messaggio)des.push(r.messaggio);
+  const indir=[r.indirizzo, r.comune, r.cap].filter(Boolean).join(', ');
+  const html=`<div class="sch">
+    <h1>SCHEDA SOPRALLUOGO — CVA Smart Energy</h1>
+    <div class="sch-sub">Da compilare con il cliente prima e durante il sopralluogo</div>
+
+    <div class="pre">
+      <div class="riga"><b>Nome pratica:</b> ${esc(cliente(r))}</div>
+      <div class="riga"><b>Indirizzo:</b> ${esc(indir)||'—'}</div>
+      <div class="riga"><b>Telefono:</b> ${esc(r.telefono)||'—'}</div>
+      <div class="riga"><b>Appuntamento:</b> ${r.appData?fmtDate(r.appData):'—'}${r.appOra?' h. '+r.appOra:''} &nbsp;&nbsp; <b style="min-width:60px">Tecnico:</b> ${esc(r.tecnico)||'—'}</div>
+      <div class="riga"><b>Soluzione/desiderata:</b> ${esc(des.join(' · '))||'—'}</div>
+      <div class="riga"><b>Tipologia / superficie:</b> ${esc(r.tipologia)||'—'}${r.superficie?' · '+esc(r.superficie):''}</div>
+      <div class="riga"><b>Impianto attuale:</b> ${esc(r.impianto)||'—'}</div>
+    </div>
+
+    <h2>Dati edificio</h2>
+    <div class="row">Anno stimato realizzazione edificio: ${L(120)}</div>
+    <div class="row">L'analisi riguarda: ${ck('Casa monofamiliare')} ${ck('UI in casa plurifam./condominio a torre')}<br>
+      <span style="margin-left:120px">${ck('Intero edificio')} ${ck('UI in edificio multipiano in linea')}</span></div>
+    <div class="row">Cliente proprietario dell'immobile/UI: ${ck('Sì')} ${ck('No')}</div>
+    <div class="row">Desiderata cliente (integrazioni):</div>
+    <div class="lnf"></div><div class="lnf"></div>
+
+    <h2>Involucro</h2>
+    <div class="row"><b>Pareti</b> — Isolamento: ${ck('Buono')} ${ck('Poco')} ${ck('Non presente')}<br>
+      <span style="margin-left:60px">Confine: ${ck('Esterno')} ${ck('Non riscaldato')} ${ck('Riscaldato')} ${ck('Terreno')}</span></div>
+    <div class="row"><b>Soffitto/tetto</b> — Isolamento: ${ck('Buono')} ${ck('Poco')} ${ck('Non presente')}<br>
+      <span style="margin-left:60px">Confine: ${ck('Esterno')} ${ck('Non riscaldato')} ${ck('Riscaldato')}</span></div>
+    <div class="row"><b>Pavimento</b> — Isolamento: ${ck('Buono')} ${ck('Poco')} ${ck('Non presente')}<br>
+      <span style="margin-left:60px">Confine: ${ck('Non riscaldato')} ${ck('Riscaldato')} ${ck('Terreno')}</span></div>
+    <div class="row">Serramenti installati nel: ${L(100)} &nbsp; Superficie netta: ${L(90)} &nbsp; Volume riscaldato: ${L(90)}</div>
+
+    <h2>Impianti rinnovabili presenti</h2>
+    <div class="row">FV: ${L(70)} kWp — esposizione: ${L(120)}</div>
+    <div class="row">Solare: ${L(70)} pannelli — esposizione: ${L(120)}</div>
+
+    <h2>Spese annuali</h2>
+    <div class="row">Vettore: ${L(120)} Spesa annua: ${L(70)} €</div>
+    <div class="row">Vettore: ${L(120)} Spesa annua: ${L(70)} €</div>
+    <div class="row">Vettore: ${L(120)} Spesa annua: ${L(70)} €</div>
+
+    <h2>Sopralluogo per cambio generatore</h2>
+    <div class="foto">Foto targhetta generatore esistente</div>
+    <div class="foto">Foto CT (anche accumuli ed eventuale collettore di distribuzione)</div>
+    <div class="row">Tipologia, alimentazione e potenza: ${L(260)}</div>
+    <div class="row">Impianto: ${ck('Autonomo')} ${ck('Centralizzato più UI')} ${ck('Centralizzato più edifici')}</div>
+    <div class="row">Anno di installazione: ${L(100)} &nbsp; N° stacchi collettore: ${L(60)}</div>
+    <div class="row">Terminali di emissione: ${L(240)}</div>
+    <div class="row">Regolazione generatore: ${L(240)}</div>
+    <div class="row">Che generatore fa ACS? ${ck('Stesso')} ${ck('Altro:')} ${L(120)}</div>
+    <div class="row">Nuovo generatore ipotizzato: ${L(230)}</div>
+    <div class="row">Nuovo generatore per: ${ck('Caldo')} ${ck('ACS')} ${ck('Freddo')}</div>
+    <div class="row">Luogo di posizionamento elementi da installare: ${L(200)}</div>
+    <div class="foto">Foto zona di posizionamento eventuali unità esterne</div>
+    <div class="row">Altri elementi idraulici da sostituire: ${L(210)}</div>
+    <div class="row">Rifacimento regolazione: ${ck('Sì')} ${ck('No')}</div>
+    <div class="row">Bozza schema idraulico esistente:</div>
+    <div class="note-box"></div>
+
+    <h2>Sopralluogo FV</h2>
+    <div class="foto">Foto edificio da esterno</div>
+    <div class="foto">Foto tetto</div>
+    <div class="row"><b>Falda 1</b> — Quanti lucernai e/o camini: ${L(120)}</div>
+    <div class="row">Esposizione: ${L(140)}</div>
+    <div class="row">Tipologia di copertura: ${ck('lose')} ${ck('tegole')} ${ck('lamiera')} &nbsp; Base tetto: ${ck('legno')} ${ck('cemento')}</div>
+    <div class="foto">Foto zona contatori e zona di posizionamento quadri ed inverter</div>
+    <div class="row">Posizione quadro DC: ${L(200)}</div>
+    <div class="row">Posizione inverter: ${L(210)}</div>
+    <div class="row">Posizione quadro AC: ${L(200)}</div>
+    <div class="row">Va rifatto il quadro generale? ${ck('Sì')} ${ck('No')} &nbsp; Quante utenze collegate: ${L(80)}</div>
+    <div class="row">Descrizione percorso e distanza da pannelli a inverter:</div>
+    <div class="lnf"></div><div class="lnf"></div>
+
+    <h2>Note aggiuntive sopralluogo</h2>
+    <div class="note-box" style="min-height:110px"></div>
+  </div>`;
+  document.getElementById('scheda-print').innerHTML=html;
+  document.body.classList.add('print-scheda');
+  const cleanup=()=>{ document.body.classList.remove('print-scheda'); window.removeEventListener('afterprint',cleanup); };
+  window.addEventListener('afterprint',cleanup);
+  window.print();
+  setTimeout(cleanup,2000); // fallback
 }
 
 function exportCSV(){
